@@ -70,6 +70,36 @@ def manual_public_surface(root: Path) -> tuple[set[str], set[str], set[str], str
     return classes, functions, methods, digest
 
 
+def method_default_surface(root: Path) -> tuple[set[str], str]:
+    mappings: set[str] = set()
+    for path in sorted(root.glob("*.py")):
+        for node in ast.parse(path.read_text()).body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for member in node.body:
+                if not isinstance(member, ast.AnnAssign):
+                    continue
+                if not isinstance(member.target, ast.Name) or member.value is None:
+                    continue
+                for value in ast.walk(member.value):
+                    if not isinstance(value, ast.Call):
+                        continue
+                    if not isinstance(value.func, ast.Name) or value.func.id != "Default":
+                        continue
+                    if not value.args or not isinstance(value.args[0], ast.Constant):
+                        continue
+                    property_name = value.args[0].value
+                    if isinstance(property_name, str):
+                        mappings.add(
+                            f"{node.name}.{member.target.id}={property_name}"
+                        )
+                    break
+    digest = hashlib.sha256(
+        ("\n".join(sorted(mappings)) + "\n").encode()
+    ).hexdigest()
+    return mappings, digest
+
+
 def main() -> None:
     compatibility = tomllib.loads((ROOT / "compatibility.toml").read_text())
     cargo = tomllib.loads((ROOT / "Cargo.toml").read_text())
@@ -178,6 +208,19 @@ def main() -> None:
         public_surface_digest,
         surface["manual_python_public_surface_sha256"],
         "manual Python public surface fingerprint",
+    )
+    method_defaults, method_defaults_digest = method_default_surface(
+        UPSTREAM / "aiogram" / "methods"
+    )
+    require(
+        len(method_defaults),
+        surface["mapped_python_method_defaults"],
+        "upstream Python method default count",
+    )
+    require(
+        method_defaults_digest,
+        surface["python_method_defaults_sha256"],
+        "upstream Python method default fingerprint",
     )
     require(
         generated_count(ROOT / "src" / "types" / "generated.rs", "API_ENTITY_COUNT"),
