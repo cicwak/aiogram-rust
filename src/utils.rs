@@ -1314,6 +1314,11 @@ pub mod callback_data {
         fn decode_callback(value: &str) -> Result<Self>;
     }
 
+    /// A callback protocol that can be packed directly into an inline button.
+    pub trait PackCallbackData {
+        fn pack_callback_data(&self) -> Result<String>;
+    }
+
     impl CallbackValue for String {
         fn encode_callback(&self) -> String {
             self.clone()
@@ -1560,6 +1565,12 @@ pub mod callback_data {
             &self.separator
         }
     }
+
+    impl PackCallbackData for CallbackData {
+        fn pack_callback_data(&self) -> Result<String> {
+            self.pack()
+        }
+    }
 }
 
 /// Declares strongly typed callback data with aiogram's compact prefix protocol.
@@ -1634,6 +1645,12 @@ macro_rules! callback_data {
                         stringify!($field),
                     )))?),+
                 })
+            }
+        }
+
+        impl $crate::utils::callback_data::PackCallbackData for $name {
+            fn pack_callback_data(&self) -> $crate::Result<String> {
+                self.pack()
             }
         }
     };
@@ -3130,6 +3147,7 @@ pub mod keyboard {
     use crate::types::{
         InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup,
     };
+    use crate::utils::callback_data::PackCallbackData;
 
     fn adjusted<T: Clone>(
         buttons: &[T],
@@ -3209,6 +3227,15 @@ pub mod keyboard {
             let mut button = InlineKeyboardButton::new(text);
             button.callback_data = Some(data.into());
             self.add(button)
+        }
+
+        /// Adds a callback button from a typed callback-data protocol.
+        pub fn callback_data(
+            self,
+            text: impl Into<String>,
+            data: &impl PackCallbackData,
+        ) -> Result<Self> {
+            self.callback(text, data.pack_callback_data()?)
         }
 
         pub fn url(self, text: impl Into<String>, url: impl Into<String>) -> Result<Self> {
@@ -3748,6 +3775,28 @@ mod tests {
         );
         let rebuilt = InlineKeyboardBuilder::from_markup(markup.clone()).unwrap();
         assert_eq!(rebuilt.export(), markup.inline_keyboard);
+
+        let action = AdminAction::new(42, "open".to_owned());
+        let typed_markup = InlineKeyboardBuilder::new()
+            .callback_data("Open", &action)
+            .unwrap()
+            .build();
+        assert_eq!(
+            typed_markup.inline_keyboard[0][0].callback_data.as_deref(),
+            Some("admin:42:open")
+        );
+
+        let runtime = CallbackData::new("runtime").unwrap().push("close").unwrap();
+        let runtime_markup = InlineKeyboardBuilder::new()
+            .callback_data("Close", &runtime)
+            .unwrap()
+            .build();
+        assert_eq!(
+            runtime_markup.inline_keyboard[0][0]
+                .callback_data
+                .as_deref(),
+            Some("runtime:close")
+        );
 
         let reply = ReplyKeyboardBuilder::new()
             .text("one")
