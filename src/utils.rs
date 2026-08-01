@@ -1383,15 +1383,29 @@ pub mod callback_data {
 
     #[doc(hidden)]
     pub fn pack_parts(prefix: &str, values: &[String]) -> Result<String> {
-        if prefix.contains(':') || values.iter().any(|value| value.contains(':')) {
+        pack_parts_with_separator(prefix, ":", values)
+    }
+
+    #[doc(hidden)]
+    pub fn pack_parts_with_separator(
+        prefix: &str,
+        separator: &str,
+        values: &[String],
+    ) -> Result<String> {
+        if separator.is_empty() {
             return Err(Error::Utility(
-                "callback prefix and values cannot contain ':'".to_owned(),
+                "callback separator cannot be empty".to_owned(),
             ));
+        }
+        if prefix.contains(separator) || values.iter().any(|value| value.contains(separator)) {
+            return Err(Error::Utility(format!(
+                "callback prefix and values cannot contain {separator:?}"
+            )));
         }
         let packed = std::iter::once(prefix)
             .chain(values.iter().map(String::as_str))
             .collect::<Vec<_>>()
-            .join(":");
+            .join(separator);
         if packed.len() > MAX_CALLBACK_LENGTH {
             return Err(Error::Utility(format!(
                 "callback data exceeds {MAX_CALLBACK_LENGTH} bytes"
@@ -1406,7 +1420,22 @@ pub mod callback_data {
         packed: &'a str,
         expected: usize,
     ) -> Result<Vec<&'a str>> {
-        let mut parts = packed.split(':');
+        unpack_parts_with_separator(prefix, ":", packed, expected)
+    }
+
+    #[doc(hidden)]
+    pub fn unpack_parts_with_separator<'a>(
+        prefix: &str,
+        separator: &str,
+        packed: &'a str,
+        expected: usize,
+    ) -> Result<Vec<&'a str>> {
+        if separator.is_empty() {
+            return Err(Error::Utility(
+                "callback separator cannot be empty".to_owned(),
+            ));
+        }
+        let mut parts = packed.split(separator);
         if parts.next() != Some(prefix) {
             return Err(Error::Utility("callback data prefix mismatch".to_owned()));
         }
@@ -1424,18 +1453,24 @@ pub mod callback_data {
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct CallbackData {
         prefix: String,
-        separator: char,
+        separator: String,
         values: Vec<String>,
     }
 
     impl CallbackData {
         pub fn new(prefix: impl Into<String>) -> Result<Self> {
-            Self::with_separator(prefix, ':')
+            Self::with_separator(prefix, ":")
         }
 
-        pub fn with_separator(prefix: impl Into<String>, separator: char) -> Result<Self> {
+        pub fn with_separator(prefix: impl Into<String>, separator: impl ToString) -> Result<Self> {
             let prefix = prefix.into();
-            if prefix.contains(separator) {
+            let separator = separator.to_string();
+            if separator.is_empty() {
+                return Err(Error::Utility(
+                    "callback separator cannot be empty".to_owned(),
+                ));
+            }
+            if prefix.contains(&separator) {
                 return Err(Error::Utility(format!(
                     "callback prefix cannot contain separator {separator:?}"
                 )));
@@ -1449,7 +1484,7 @@ pub mod callback_data {
 
         pub fn push(mut self, value: impl Display) -> Result<Self> {
             let value = value.to_string();
-            if value.contains(self.separator) {
+            if value.contains(&self.separator) {
                 return Err(Error::Utility(format!(
                     "callback value cannot contain separator {:?}",
                     self.separator
@@ -1465,7 +1500,7 @@ pub mod callback_data {
             if self
                 .values
                 .last()
-                .is_some_and(|value| value.contains(self.separator))
+                .is_some_and(|value| value.contains(&self.separator))
             {
                 return Err(Error::Utility(format!(
                     "callback value cannot contain separator {:?}",
@@ -1478,7 +1513,7 @@ pub mod callback_data {
         /// Pushes a value using the same encoding rules as typed callback data.
         pub fn push_value<T: CallbackValue>(mut self, value: T) -> Result<Self> {
             let value = value.encode_callback();
-            if value.contains(self.separator) {
+            if value.contains(&self.separator) {
                 return Err(Error::Utility(format!(
                     "callback value cannot contain separator {:?}",
                     self.separator
@@ -1489,11 +1524,10 @@ pub mod callback_data {
         }
 
         pub fn pack(&self) -> Result<String> {
-            let separator = self.separator.to_string();
             let mut parts = Vec::with_capacity(self.values.len() + 1);
             parts.push(self.prefix.as_str());
             parts.extend(self.values.iter().map(String::as_str));
-            let packed = parts.join(&separator);
+            let packed = parts.join(&self.separator);
             if packed.len() > MAX_CALLBACK_LENGTH {
                 return Err(Error::Utility(format!(
                     "callback data exceeds {MAX_CALLBACK_LENGTH} bytes"
@@ -1503,7 +1537,7 @@ pub mod callback_data {
         }
 
         pub fn unpack<'a>(&self, packed: &'a str) -> Result<Vec<&'a str>> {
-            let mut parts = packed.split(self.separator);
+            let mut parts = packed.split(&self.separator);
             if parts.next() != Some(self.prefix.as_str()) {
                 return Err(Error::Utility("callback data prefix mismatch".to_owned()));
             }
@@ -1521,6 +1555,10 @@ pub mod callback_data {
         pub fn prefix(&self) -> &str {
             &self.prefix
         }
+
+        pub fn separator(&self) -> &str {
+            &self.separator
+        }
     }
 }
 
@@ -1529,6 +1567,32 @@ pub mod callback_data {
 macro_rules! callback_data {
     (
         $visibility:vis struct $name:ident($prefix:literal) {
+            $($field:ident: $type:ty),+ $(,)?
+        }
+    ) => {
+        $crate::callback_data! {
+            @impl $visibility struct $name($prefix, ":") {
+                $($field: $type),+
+            }
+        }
+    };
+    (
+        $visibility:vis struct $name:ident(
+            $prefix:literal, separator = $separator:literal
+        ) {
+            $($field:ident: $type:ty),+ $(,)?
+        }
+    ) => {
+        $crate::callback_data! {
+            @impl $visibility struct $name($prefix, $separator) {
+                $($field: $type),+
+            }
+        }
+    };
+    (
+        @impl $visibility:vis struct $name:ident(
+            $prefix:literal, $separator:literal
+        ) {
             $($field:ident: $type:ty),+ $(,)?
         }
     ) => {
@@ -1543,8 +1607,9 @@ macro_rules! callback_data {
             }
 
             $visibility fn pack(&self) -> $crate::Result<String> {
-                $crate::utils::callback_data::pack_parts(
+                $crate::utils::callback_data::pack_parts_with_separator(
                     $prefix,
+                    $separator,
                     &[$(<$type as $crate::utils::callback_data::CallbackValue>::encode_callback(
                         &self.$field,
                     )),+],
@@ -1552,8 +1617,9 @@ macro_rules! callback_data {
             }
 
             $visibility fn unpack(value: &str) -> $crate::Result<Self> {
-                let values = $crate::utils::callback_data::unpack_parts(
+                let values = $crate::utils::callback_data::unpack_parts_with_separator(
                     $prefix,
+                    $separator,
                     value,
                     [$(stringify!($field)),+].len(),
                 )?;
@@ -3250,6 +3316,13 @@ mod tests {
         }
     }
 
+    crate::callback_data! {
+        struct CustomSeparatorAction("custom", separator = "::") {
+            user_id: i64,
+            action: String,
+        }
+    }
+
     #[test]
     fn callback_data_roundtrip_and_limit() {
         let protocol = CallbackData::new("admin")
@@ -3280,6 +3353,27 @@ mod tests {
             .push_value(None::<u32>)
             .unwrap();
         assert_eq!(runtime.pack().unwrap(), "toggle:1:");
+
+        let runtime = CallbackData::with_separator("runtime", "::")
+            .unwrap()
+            .push(42)
+            .unwrap()
+            .push("open")
+            .unwrap();
+        assert_eq!(runtime.separator(), "::");
+        assert_eq!(runtime.pack().unwrap(), "runtime::42::open");
+        assert_eq!(runtime.unpack("runtime::42::open").unwrap(), ["42", "open"]);
+        assert!(CallbackData::with_separator("runtime", "").is_err());
+
+        let legacy_char_separator = CallbackData::with_separator("legacy", '|').unwrap();
+        assert_eq!(legacy_char_separator.separator(), "|");
+
+        let typed = CustomSeparatorAction::new(42, "open".to_owned());
+        assert_eq!(typed.pack().unwrap(), "custom::42::open");
+        assert_eq!(
+            CustomSeparatorAction::unpack("custom::42::open").unwrap(),
+            typed
+        );
     }
 
     #[test]
