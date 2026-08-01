@@ -1272,6 +1272,15 @@ impl Dispatcher {
         self.feed_update_inner(bot, update, None).await
     }
 
+    /// Validates and dispatches an update represented as raw JSON data.
+    ///
+    /// This is the typed Rust counterpart of aiogram's `feed_raw_update` and
+    /// is useful for brokers, recorded updates and framework integrations that
+    /// have already parsed the HTTP request body.
+    pub async fn feed_raw_update(&self, bot: Bot, update: serde_json::Value) -> Result<bool> {
+        self.feed_update(bot, serde_json::from_value(update)?).await
+    }
+
     pub async fn feed_webhook_update(
         &self,
         bot: Bot,
@@ -1521,7 +1530,7 @@ pub fn cancel() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
     use super::*;
     use crate::filters;
@@ -1583,6 +1592,32 @@ mod tests {
                 .load(Ordering::SeqCst),
             1
         );
+    }
+
+    #[tokio::test]
+    async fn feed_raw_update_validates_and_dispatches_json_values() {
+        let seen = Arc::new(AtomicBool::new(false));
+        let mut router = Router::new();
+        let handler_seen = seen.clone();
+        router.message(filters::any(), move |_| {
+            let handler_seen = handler_seen.clone();
+            async move {
+                handler_seen.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+        });
+        let mut dispatcher = Dispatcher::new();
+        dispatcher.include_router(router);
+
+        let raw = serde_json::to_value(update("message", "hello")).unwrap();
+        assert!(dispatcher.feed_raw_update(bot(), raw).await.unwrap());
+        assert!(seen.load(Ordering::SeqCst));
+
+        let invalid = serde_json::json!({"update_id": "not-an-integer"});
+        assert!(matches!(
+            dispatcher.feed_raw_update(bot(), invalid).await,
+            Err(Error::Json(_))
+        ));
     }
 
     #[tokio::test]

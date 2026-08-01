@@ -7,11 +7,11 @@ This map covers the 95 Python framework modules outside the generated `types`, `
 | Python namespace | Rust mapping | Compatibility notes |
 | --- | --- | --- |
 | package metadata, `loggers`, `exceptions` | `version`, `tracing`, `error::Error` | Independent port/upstream/Bot API coordinates; typed Telegram HTTP, retry, migration, decode, transport, dispatcher, FSM and utility errors |
-| `client.bot`, `client.default` | `Bot`, `BotBuilder`, `DefaultBotProperties` | Typed and forward-compatible requests, cached `get_me`, per-call timeout, selective/all default suppression, downloads and redacted debug output |
+| `client.bot`, `client.default` | `Bot`, `BotBuilder`, `DefaultBotProperties` | Typed and forward-compatible requests, token-based equality/hash, cached `get_me`, per-call timeout, selective/all default suppression, downloads and redacted debug output |
 | `client.session.*` | reqwest-backed client plus `RequestMiddleware`/`RequestNext` | Custom reqwest clients cover proxy/TLS/timeout/connectors; middleware can mutate, observe or terminally answer requests; JSON/multipart and streaming files are built in |
 | `client.telegram` | `TelegramApiServer` | Production, test and custom endpoints plus local Bot API file-path translation |
 | `client.context_controller` | owned/cloned `Bot` and explicit `UpdateContext` | Rust ownership replaces mutable context mounting; generated bound helpers build typed methods executed by `Bot` |
-| `dispatcher.dispatcher`, `dispatcher.router` | `Dispatcher`, `Router` | Typed workflow data, nested propagation, used-update resolution, foreground/webhook feed, multi-bot polling, backoff, concurrency limits, signals and programmatic stop |
+| `dispatcher.dispatcher`, `dispatcher.router` | `Dispatcher`, `Router` | Typed and raw-JSON workflow feed, nested propagation, used-update resolution, foreground/webhook feed, multi-bot polling, backoff, concurrency limits, signals and programmatic stop |
 | `dispatcher.event.*` | routes, `Filter`, `HandlerFlags`, `ClassHandler`, `skip`/`cancel` | Observer root filters, handler filters, all named event shortcuts, class/stateful handlers and typed capture injection |
 | `dispatcher.middlewares.*` | `Middleware`, `OuterMiddleware`, `Next`, `OuterNext`, `EventContext` | Global and event-scoped inner/outer chains, user/chat/thread/business context, error propagation and recursive lifecycle |
 | `filters.base`, `filters.logic` | `Filter`, `FnFilter`, `FilterExt`, `all`, `either`, `Not` | Async custom filters and AND/OR/NOT composition |

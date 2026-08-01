@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -48,6 +49,20 @@ struct Inner {
 #[derive(Clone)]
 pub struct Bot {
     inner: Arc<Inner>,
+}
+
+impl PartialEq for Bot {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner.token == other.inner.token
+    }
+}
+
+impl Eq for Bot {}
+
+impl Hash for Bot {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.inner.token.hash(state);
+    }
 }
 
 impl fmt::Debug for Bot {
@@ -702,6 +717,23 @@ mod tests {
         let output = format!("{bot:?}");
         assert!(!output.contains(token));
         assert!(output.contains("<redacted>"));
+    }
+
+    #[test]
+    fn equality_and_hash_follow_the_bot_token() {
+        use std::collections::HashSet;
+
+        let production = Bot::new("42:secret").unwrap();
+        let custom_server = Bot::with_api_base("42:secret", "http://localhost:8081").unwrap();
+        let other = Bot::new("43:secret").unwrap();
+
+        assert_eq!(production, custom_server);
+        assert_ne!(production, other);
+        let mut bots = HashSet::new();
+        bots.insert(production);
+        bots.insert(custom_server);
+        bots.insert(other);
+        assert_eq!(bots.len(), 2);
     }
 
     #[test]
