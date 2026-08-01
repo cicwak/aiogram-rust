@@ -1,9 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-repository="https://github.com/aiogram/aiogram.git"
-commit="c1b0353ce3d3f8d70f90469038939a956e9e09f7"
+root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+cd "$root"
+
 destination="${1:-aiogram}"
+repository="$(python3 -c 'import tomllib; print(tomllib.load(open("compatibility.toml", "rb"))["upstream"]["aiogram"]["repository"])')"
+commit="$(python3 -c 'import tomllib; print(tomllib.load(open("compatibility.toml", "rb"))["upstream"]["aiogram"]["commit"])')"
 
 if [ -e "$destination" ]; then
     if [ -d "$destination/.git" ] && [ "$(git -C "$destination" rev-parse HEAD)" = "$commit" ]; then

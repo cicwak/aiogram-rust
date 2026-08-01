@@ -18,14 +18,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          mapfile -t coordinates < <(python3 - <<'PY'
           import tomllib
           from pathlib import Path
           data = tomllib.loads(Path("compatibility.toml").read_text())
-          print(f"pinned_commit={data['upstream']['aiogram']['commit']}")
-          print(f"pinned_version={data['upstream']['aiogram']['version']}")
+          aiogram = data["upstream"]["aiogram"]
+          print(aiogram["repository"])
+          print(aiogram["branch"])
+          print(aiogram["commit"])
+          print(aiogram["version"])
           PY
-          git clone --depth 1 --branch dev-3.x https://github.com/aiogram/aiogram.git /tmp/aiogram-upstream
+          )
+          repository="${coordinates[0]}"
+          branch="${coordinates[1]}"
+          pinned_commit="${coordinates[2]}"
+          pinned_version="${coordinates[3]}"
+          {
+            echo "repository=$repository"
+            echo "branch=$branch"
+            echo "pinned_commit=$pinned_commit"
+            echo "pinned_version=$pinned_version"
+          } >> "$GITHUB_OUTPUT"
+          git clone --depth 1 --branch "$branch" "$repository" /tmp/aiogram-upstream
           echo "latest_commit=$(git -C /tmp/aiogram-upstream rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import ast
