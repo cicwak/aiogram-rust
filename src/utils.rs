@@ -1125,6 +1125,7 @@ pub mod chat_action {
 }
 
 pub mod backoff {
+    use std::fmt;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     use crate::error::{Error, Result};
@@ -1205,6 +1206,22 @@ pub mod backoff {
             self.config
         }
 
+        pub fn min_delay(&self) -> Duration {
+            self.config.min_delay
+        }
+
+        pub fn max_delay(&self) -> Duration {
+            self.config.max_delay
+        }
+
+        pub fn factor(&self) -> f64 {
+            self.config.factor
+        }
+
+        pub fn jitter(&self) -> Duration {
+            self.config.jitter
+        }
+
         pub fn next_delay(&self) -> Duration {
             self.next_delay
         }
@@ -1232,19 +1249,48 @@ pub mod backoff {
             let maximum = self.config.max_delay.as_secs_f64();
             let base = (self.next_delay.as_secs_f64() * self.config.factor).min(maximum);
             let jitter = self.config.jitter.as_secs_f64();
-            let randomized = (base + self.signed_unit() * jitter).clamp(0.0, maximum);
+            let randomized = self.normalvariate(base, jitter).max(0.0);
             self.next_delay = Duration::from_secs_f64(randomized);
             self.counter += 1;
             self.current_delay
         }
 
-        fn signed_unit(&mut self) -> f64 {
+        fn unit(&mut self) -> f64 {
             let mut value = self.rng_state;
             value ^= value << 13;
             value ^= value >> 7;
             value ^= value << 17;
             self.rng_state = value;
-            (value as f64 / u64::MAX as f64) * 2.0 - 1.0
+            (value as f64 + 1.0) / (u64::MAX as f64 + 2.0)
+        }
+
+        fn normalvariate(&mut self, mean: f64, standard_deviation: f64) -> f64 {
+            if standard_deviation == 0.0 {
+                return mean;
+            }
+            let radius = (-2.0 * self.unit().ln()).sqrt();
+            let angle = std::f64::consts::TAU * self.unit();
+            mean + standard_deviation * radius * angle.cos()
+        }
+    }
+
+    impl Iterator for Backoff {
+        type Item = Duration;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            Some(self.advance())
+        }
+    }
+
+    impl fmt::Display for Backoff {
+        fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(
+                formatter,
+                "Backoff(tryings={}, current_delay={}, next_delay={})",
+                self.counter,
+                self.current_delay.as_secs_f64(),
+                self.next_delay.as_secs_f64()
+            )
         }
     }
 }
@@ -3541,11 +3587,19 @@ mod tests {
         )
         .unwrap();
         let mut backoff = Backoff::new(config);
-        assert_eq!(backoff.advance(), Duration::from_secs(1));
+        assert_eq!(backoff.min_delay(), Duration::from_secs(1));
+        assert_eq!(backoff.max_delay(), Duration::from_secs(5));
+        assert_eq!(backoff.factor(), 2.0);
+        assert_eq!(backoff.jitter(), Duration::ZERO);
+        assert_eq!(backoff.next(), Some(Duration::from_secs(1)));
         assert_eq!(backoff.advance(), Duration::from_secs(2));
         assert_eq!(backoff.advance(), Duration::from_secs(4));
         assert_eq!(backoff.advance(), Duration::from_secs(5));
         assert_eq!(backoff.counter(), 4);
+        assert_eq!(
+            backoff.to_string(),
+            "Backoff(tryings=4, current_delay=5, next_delay=5)"
+        );
         backoff.reset();
         assert_eq!(backoff.next_delay(), Duration::from_secs(1));
         assert_eq!(backoff.counter(), 0);
