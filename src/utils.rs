@@ -856,6 +856,66 @@ pub mod chat_action {
             Self::new(bot, chat_id, ChatAction::UploadPhoto)
         }
 
+        pub fn record_video(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::RecordVideo)
+        }
+
+        pub fn upload_video(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::UploadVideo)
+        }
+
+        pub fn record_voice(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::RecordVoice)
+        }
+
+        pub fn upload_voice(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::UploadVoice)
+        }
+
+        pub fn upload_document(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::UploadDocument)
+        }
+
+        pub fn choose_sticker(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::ChooseSticker)
+        }
+
+        pub fn find_location(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::FindLocation)
+        }
+
+        pub fn record_video_note(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::RecordVideoNote)
+        }
+
+        pub fn upload_video_note(bot: Bot, chat_id: impl Into<ChatId>) -> Self {
+            Self::new(bot, chat_id, ChatAction::UploadVideoNote)
+        }
+
+        pub fn bot(&self) -> &Bot {
+            &self.bot
+        }
+
+        pub fn chat_id(&self) -> &ChatId {
+            &self.chat_id
+        }
+
+        pub fn message_thread(&self) -> Option<i64> {
+            self.message_thread_id
+        }
+
+        pub fn action(&self) -> &str {
+            &self.action
+        }
+
+        pub fn repeat_interval(&self) -> Duration {
+            self.interval
+        }
+
+        pub fn initial_delay(&self) -> Duration {
+            self.initial_sleep
+        }
+
         pub fn message_thread_id(mut self, value: i64) -> Self {
             self.message_thread_id = Some(value);
             self
@@ -3225,6 +3285,50 @@ mod tests {
         assert_eq!(json[0]["caption"], "album");
         assert_eq!(json[0]["media"], "attach://first.jpg");
         assert!(json[1].get("caption").is_none());
+    }
+
+    #[test]
+    fn chat_action_sender_exposes_every_aiogram_factory() {
+        let bot = crate::Bot::new("123456:abcdefghijklmnopqrstuvwxyzABCDE").unwrap();
+        let actions = [
+            ChatActionSender::typing(bot.clone(), 42_i64),
+            ChatActionSender::upload_photo(bot.clone(), 42_i64),
+            ChatActionSender::record_video(bot.clone(), 42_i64),
+            ChatActionSender::upload_video(bot.clone(), 42_i64),
+            ChatActionSender::record_voice(bot.clone(), 42_i64),
+            ChatActionSender::upload_voice(bot.clone(), 42_i64),
+            ChatActionSender::upload_document(bot.clone(), 42_i64),
+            ChatActionSender::choose_sticker(bot.clone(), 42_i64),
+            ChatActionSender::find_location(bot.clone(), 42_i64),
+            ChatActionSender::record_video_note(bot.clone(), 42_i64),
+            ChatActionSender::upload_video_note(bot.clone(), 42_i64),
+        ];
+        assert_eq!(
+            actions.map(|sender| sender.action().to_owned()),
+            [
+                "typing",
+                "upload_photo",
+                "record_video",
+                "upload_video",
+                "record_voice",
+                "upload_voice",
+                "upload_document",
+                "choose_sticker",
+                "find_location",
+                "record_video_note",
+                "upload_video_note",
+            ]
+        );
+
+        let sender = ChatActionSender::upload_voice(bot, 7_i64)
+            .message_thread_id(11)
+            .interval(Duration::from_secs(4))
+            .initial_sleep(Duration::from_secs(2));
+        assert_eq!(sender.chat_id(), &crate::types::ChatId::Id(7));
+        assert_eq!(sender.message_thread(), Some(11));
+        assert_eq!(sender.repeat_interval(), Duration::from_secs(4));
+        assert_eq!(sender.initial_delay(), Duration::from_secs(2));
+        assert_eq!(sender.bot().id(), 123456);
     }
 
     #[tokio::test]
