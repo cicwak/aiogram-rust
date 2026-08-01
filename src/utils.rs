@@ -3223,6 +3223,22 @@ pub mod keyboard {
             Ok(self)
         }
 
+        pub fn add_many(
+            mut self,
+            buttons: impl IntoIterator<Item = InlineKeyboardButton>,
+        ) -> Result<Self> {
+            let buttons: Vec<_> = buttons.into_iter().collect();
+            if self.buttons().count() + buttons.len() > Self::MAX_BUTTONS {
+                return Err(Error::Utility(
+                    "inline keyboard has more than 100 buttons".to_owned(),
+                ));
+            }
+            for button in buttons {
+                self = self.add(button)?;
+            }
+            Ok(self)
+        }
+
         pub fn callback(self, text: impl Into<String>, data: impl Into<String>) -> Result<Self> {
             let mut button = InlineKeyboardButton::new(text);
             button.callback_data = Some(data.into());
@@ -3244,12 +3260,17 @@ pub mod keyboard {
             self.add(button)
         }
 
-        pub fn row(
+        pub fn row(self, buttons: impl IntoIterator<Item = InlineKeyboardButton>) -> Result<Self> {
+            self.row_with_width(buttons, Self::MAX_WIDTH)
+        }
+
+        pub fn row_with_width(
             mut self,
             buttons: impl IntoIterator<Item = InlineKeyboardButton>,
+            width: usize,
         ) -> Result<Self> {
             let buttons: Vec<_> = buttons.into_iter().collect();
-            if buttons.is_empty() || buttons.len() > Self::MAX_WIDTH {
+            if width == 0 || width > Self::MAX_WIDTH {
                 return Err(Error::Utility(
                     "inline row width must be between 1 and 8".to_owned(),
                 ));
@@ -3259,7 +3280,7 @@ pub mod keyboard {
                     "inline keyboard has more than 100 buttons".to_owned(),
                 ));
             }
-            self.rows.push(buttons);
+            self.rows.extend(buttons.chunks(width).map(<[_]>::to_vec));
             Ok(self)
         }
 
@@ -3333,13 +3354,37 @@ pub mod keyboard {
             Ok(self)
         }
 
+        pub fn add_many(
+            mut self,
+            buttons: impl IntoIterator<Item = KeyboardButton>,
+        ) -> Result<Self> {
+            let buttons: Vec<_> = buttons.into_iter().collect();
+            if self.buttons().count() + buttons.len() > Self::MAX_BUTTONS {
+                return Err(Error::Utility(
+                    "reply keyboard has more than 300 buttons".to_owned(),
+                ));
+            }
+            for button in buttons {
+                self = self.add(button)?;
+            }
+            Ok(self)
+        }
+
         pub fn text(self, text: impl Into<String>) -> Result<Self> {
             self.add(KeyboardButton::new(text))
         }
 
-        pub fn row(mut self, buttons: impl IntoIterator<Item = KeyboardButton>) -> Result<Self> {
+        pub fn row(self, buttons: impl IntoIterator<Item = KeyboardButton>) -> Result<Self> {
+            self.row_with_width(buttons, Self::MAX_WIDTH)
+        }
+
+        pub fn row_with_width(
+            mut self,
+            buttons: impl IntoIterator<Item = KeyboardButton>,
+            width: usize,
+        ) -> Result<Self> {
             let buttons: Vec<_> = buttons.into_iter().collect();
-            if buttons.is_empty() || buttons.len() > Self::MAX_WIDTH {
+            if width == 0 || width > Self::MAX_WIDTH {
                 return Err(Error::Utility(
                     "reply row width must be between 1 and 10".to_owned(),
                 ));
@@ -3349,7 +3394,7 @@ pub mod keyboard {
                     "reply keyboard has more than 300 buttons".to_owned(),
                 ));
             }
-            self.rows.push(buttons);
+            self.rows.extend(buttons.chunks(width).map(<[_]>::to_vec));
             Ok(self)
         }
 
@@ -3798,6 +3843,34 @@ mod tests {
             Some("runtime:close")
         );
 
+        let inline_row = InlineKeyboardBuilder::new()
+            .row((0..9).map(|index| crate::types::InlineKeyboardButton::new(index.to_string())))
+            .unwrap()
+            .build();
+        assert_eq!(
+            inline_row
+                .inline_keyboard
+                .iter()
+                .map(Vec::len)
+                .collect::<Vec<_>>(),
+            [8, 1]
+        );
+        let inline_width = InlineKeyboardBuilder::new()
+            .row_with_width(
+                (0..9).map(|index| crate::types::InlineKeyboardButton::new(index.to_string())),
+                3,
+            )
+            .unwrap()
+            .build();
+        assert_eq!(
+            inline_width
+                .inline_keyboard
+                .iter()
+                .map(Vec::len)
+                .collect::<Vec<_>>(),
+            [3, 3, 3]
+        );
+
         let reply = ReplyKeyboardBuilder::new()
             .text("one")
             .unwrap()
@@ -3812,6 +3885,15 @@ mod tests {
                 .unwrap()
                 .export(),
             reply.keyboard
+        );
+
+        let reply_row = ReplyKeyboardBuilder::new()
+            .row((0..11).map(|index| crate::types::KeyboardButton::new(index.to_string())))
+            .unwrap()
+            .build();
+        assert_eq!(
+            reply_row.keyboard.iter().map(Vec::len).collect::<Vec<_>>(),
+            [10, 1]
         );
     }
 
