@@ -9,7 +9,7 @@ use std::sync::{Arc, RwLock};
 
 use async_trait::async_trait;
 
-use crate::dispatcher::{Middleware, Next, UpdateContext};
+use crate::dispatcher::{Middleware, Next, OuterMiddleware, OuterNext, UpdateContext};
 use crate::error::{Error, Result};
 
 #[derive(Debug, Clone)]
@@ -65,6 +65,16 @@ impl I18n {
 
     pub fn default_locale(&self) -> &str {
         &self.default_locale
+    }
+
+    /// Creates an explicit locale-bound translation context. This is the
+    /// idiomatic Rust equivalent of aiogram's scoped `use_locale()` context.
+    pub fn context(&self, locale: impl Into<String>) -> I18nContext {
+        I18nContext::new(self.clone(), locale)
+    }
+
+    pub fn default_context(&self) -> I18nContext {
+        self.context(self.default_locale().to_owned())
     }
 
     pub fn available_locales(&self) -> Vec<String> {
@@ -343,8 +353,11 @@ pub struct I18nContext {
 }
 
 impl I18nContext {
-    fn new(i18n: I18n, locale: String) -> Self {
-        Self { i18n, locale }
+    pub fn new(i18n: I18n, locale: impl Into<String>) -> Self {
+        Self {
+            i18n,
+            locale: locale.into(),
+        }
     }
 
     pub fn locale(&self) -> &str {
@@ -474,6 +487,15 @@ impl Middleware for I18nMiddleware {
     }
 }
 
+#[async_trait]
+impl OuterMiddleware for I18nMiddleware {
+    async fn handle(&self, context: UpdateContext, next: OuterNext<'_>) -> Result<bool> {
+        let locale = self.locale(&context);
+        let i18n_context = I18nContext::new(self.i18n.clone(), locale);
+        next.run(context.with_dependency(i18n_context)).await
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ConstI18nMiddleware {
     i18n: I18n,
@@ -492,6 +514,15 @@ impl ConstI18nMiddleware {
 #[async_trait]
 impl Middleware for ConstI18nMiddleware {
     async fn handle(&self, context: UpdateContext, next: Next) -> Result<()> {
+        let locale = self.i18n.normalize_locale(Some(&self.locale));
+        next.run(context.with_dependency(I18nContext::new(self.i18n.clone(), locale)))
+            .await
+    }
+}
+
+#[async_trait]
+impl OuterMiddleware for ConstI18nMiddleware {
+    async fn handle(&self, context: UpdateContext, next: OuterNext<'_>) -> Result<bool> {
         let locale = self.i18n.normalize_locale(Some(&self.locale));
         next.run(context.with_dependency(I18nContext::new(self.i18n.clone(), locale)))
             .await
@@ -528,11 +559,8 @@ impl FsmI18nMiddleware {
             .await?;
         Ok(())
     }
-}
 
-#[async_trait]
-impl Middleware for FsmI18nMiddleware {
-    async fn handle(&self, context: UpdateContext, next: Next) -> Result<()> {
+    async fn inject(&self, context: UpdateContext) -> Result<UpdateContext> {
         let state = context.dependency::<crate::fsm::FsmContext>();
         let stored = match &state {
             Some(state) => state
@@ -553,8 +581,21 @@ impl Middleware for FsmI18nMiddleware {
         {
             self.set_locale(&state, &locale).await?;
         }
-        next.run(context.with_dependency(I18nContext::new(self.i18n.clone(), locale)))
-            .await
+        Ok(context.with_dependency(I18nContext::new(self.i18n.clone(), locale)))
+    }
+}
+
+#[async_trait]
+impl Middleware for FsmI18nMiddleware {
+    async fn handle(&self, context: UpdateContext, next: Next) -> Result<()> {
+        next.run(self.inject(context).await?).await
+    }
+}
+
+#[async_trait]
+impl OuterMiddleware for FsmI18nMiddleware {
+    async fn handle(&self, context: UpdateContext, next: OuterNext<'_>) -> Result<bool> {
+        next.run(self.inject(context).await?).await
     }
 }
 
@@ -642,6 +683,50 @@ mod tests {
         assert_eq!(
             context.lazy_ngettext("items", "items", 2).to_string(),
             "2 items"
+        );
+        assert_eq!(i18n.context("en").locale(), "en");
+        assert_eq!(i18n.default_context().locale(), "en");
+    }
+
+    #[tokio::test]
+    async fn outer_middleware_injects_locale_before_filters() {
+        let i18n = I18n::new("en");
+        i18n.add("ru", "hello", "привет").unwrap();
+        let mut router = crate::Router::new();
+        router.outer_middleware(I18nMiddleware::new(i18n));
+        router.message(
+            crate::filters::FnFilter::new(|context| {
+                Box::pin(async move {
+                    context.dependency::<I18nContext>().is_some_and(|i18n| {
+                        i18n.locale() == "ru" && i18n.gettext("hello", &BTreeMap::new()) == "привет"
+                    })
+                })
+            }),
+            |_| async { Ok(()) },
+        );
+        let mut dispatcher = crate::Dispatcher::new();
+        dispatcher.include_router(router);
+        let update = serde_json::from_value(serde_json::json!({
+            "update_id": 1,
+            "message": {
+                "message_id": 1,
+                "date": 0,
+                "chat": {"id": 1, "type": "private"},
+                "from": {
+                    "id": 1,
+                    "is_bot": false,
+                    "first_name": "Ada",
+                    "language_code": "ru"
+                },
+                "text": "hello"
+            }
+        }))
+        .unwrap();
+        assert!(
+            dispatcher
+                .feed_update(crate::Bot::new("42:secret").unwrap(), update)
+                .await
+                .unwrap()
         );
     }
 

@@ -9,7 +9,7 @@ async fn main() -> Result<()> {
     let locale_path = std::env::var("LOCALES_PATH").unwrap_or_else(|_| "locales".to_owned());
     let i18n = I18n::from_path(locale_path, "en", "messages")?;
     let mut router = Router::named("i18n");
-    router.middleware(I18nMiddleware::new(i18n));
+    router.outer_middleware(I18nMiddleware::new(i18n));
 
     router.message(filters::command("items"), |context| async move {
         let translations = context
