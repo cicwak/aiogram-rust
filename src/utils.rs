@@ -4000,6 +4000,20 @@ mod tests {
                 .collect::<Vec<_>>(),
             [3, 3, 3]
         );
+        let inline_many = InlineKeyboardBuilder::new()
+            .add_many(
+                (0..9).map(|index| crate::types::InlineKeyboardButton::new(index.to_string())),
+            )
+            .unwrap()
+            .build();
+        assert_eq!(
+            inline_many
+                .inline_keyboard
+                .iter()
+                .map(Vec::len)
+                .collect::<Vec<_>>(),
+            [8, 1]
+        );
 
         let reply = ReplyKeyboardBuilder::new()
             .text("one")
@@ -4023,6 +4037,14 @@ mod tests {
             .build();
         assert_eq!(
             reply_row.keyboard.iter().map(Vec::len).collect::<Vec<_>>(),
+            [10, 1]
+        );
+        let reply_many = ReplyKeyboardBuilder::new()
+            .add_many((0..11).map(|index| crate::types::KeyboardButton::new(index.to_string())))
+            .unwrap()
+            .build();
+        assert_eq!(
+            reply_many.keyboard.iter().map(Vec::len).collect::<Vec<_>>(),
             [10, 1]
         );
     }
