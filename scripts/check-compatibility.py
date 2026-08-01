@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import re
 import subprocess
@@ -38,6 +39,35 @@ def generated_count(path: Path, constant: str) -> int:
 def require(actual: object, expected: object, label: str) -> None:
     if actual != expected:
         raise RuntimeError(f"{label}: expected {expected!r}, got {actual!r}")
+
+
+def manual_public_surface(root: Path) -> tuple[set[str], set[str], set[str], str]:
+    classes: set[str] = set()
+    functions: set[str] = set()
+    methods: set[str] = set()
+    for path in sorted(root.rglob("*.py")):
+        relative = path.relative_to(root)
+        if relative.parts[0] in {"types", "methods", "enums"}:
+            continue
+        module = ".".join(relative.with_suffix("").parts)
+        for node in ast.parse(path.read_text()).body:
+            if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
+                class_name = f"{module}.{node.name}"
+                classes.add(class_name)
+                for member in node.body:
+                    if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        if not member.name.startswith("_"):
+                            methods.add(f"{class_name}.{member.name}")
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if not node.name.startswith("_"):
+                    functions.add(f"{module}.{node.name}")
+    inventory = [
+        *(f"class:{name}" for name in sorted(classes)),
+        *(f"function:{name}" for name in sorted(functions)),
+        *(f"method:{name}" for name in sorted(methods)),
+    ]
+    digest = hashlib.sha256(("\n".join(inventory) + "\n").encode()).hexdigest()
+    return classes, functions, methods, digest
 
 
 def main() -> None:
@@ -125,6 +155,29 @@ def main() -> None:
         len(manual_modules),
         surface["manual_python_modules"],
         "manual Python framework module count",
+    )
+    public_classes, public_functions, public_methods, public_surface_digest = (
+        manual_public_surface(UPSTREAM / "aiogram")
+    )
+    require(
+        len(public_classes),
+        surface["manual_python_public_classes"],
+        "manual Python public class count",
+    )
+    require(
+        len(public_functions),
+        surface["manual_python_public_functions"],
+        "manual Python public function count",
+    )
+    require(
+        len(public_methods),
+        surface["manual_python_public_methods"],
+        "manual Python public method count",
+    )
+    require(
+        public_surface_digest,
+        surface["manual_python_public_surface_sha256"],
+        "manual Python public surface fingerprint",
     )
     require(
         generated_count(ROOT / "src" / "types" / "generated.rs", "API_ENTITY_COUNT"),

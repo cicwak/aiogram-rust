@@ -36,3 +36,5 @@ This map covers the 95 Python framework modules outside the generated `types`, `
 | `webhook.aiohttp_server` | framework-neutral webhook functions and `axum_integration` | Foreground/background dispatch, direct JSON/multipart methods, single/multi-bot routing and graceful live server lifecycle |
 
 Generated surface is checked separately: 390 entities, 35 unions, 38 enums, 185 methods, 185 `Bot` entry points, 187 object aliases, 1,896 mapped type annotations and 980 mapped method annotations. CI regenerates from the pinned checkout and rejects drift.
+
+The hand-written framework surface is also pinned structurally: the compatibility gate inventories 168 public classes, 71 public functions and 531 public methods, hashes their fully-qualified names, and rejects silent upstream drift. A changed fingerprint is a review trigger, not an automatic claim that a new symbol has been ported.

@@ -24,6 +24,10 @@ schema_methods = 185
 mapped_python_method_annotations = 980
 upstream_test_modules = 289
 manual_python_modules = 95
+manual_python_public_classes = 168
+manual_python_public_functions = 71
+manual_python_public_methods = 531
+manual_python_public_surface_sha256 = "5a21e668be29f66883de4eeb6be1102000427b2cf7d2a825eeb21e8caf83746f"
 
 [parity]
 status = "parity-candidate"
