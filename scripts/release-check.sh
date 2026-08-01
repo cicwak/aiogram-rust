@@ -30,8 +30,8 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-targets --all-features
 cargo doc --no-deps --all-features
 
-package_args=()
 if [[ "${ALLOW_DIRTY:-0}" == "1" ]]; then
-  package_args+=(--allow-dirty)
+  cargo package --allow-dirty
+else
+  cargo package
 fi
-cargo package "${package_args[@]}"
