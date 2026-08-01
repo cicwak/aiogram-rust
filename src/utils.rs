@@ -118,6 +118,36 @@ pub mod callback_answer {
                 .disabled
         }
 
+        pub fn text_value(&self) -> Option<String> {
+            self.0
+                .lock()
+                .expect("callback answer lock poisoned")
+                .text
+                .clone()
+        }
+
+        pub fn show_alert_value(&self) -> Option<bool> {
+            self.0
+                .lock()
+                .expect("callback answer lock poisoned")
+                .show_alert
+        }
+
+        pub fn url_value(&self) -> Option<String> {
+            self.0
+                .lock()
+                .expect("callback answer lock poisoned")
+                .url
+                .clone()
+        }
+
+        pub fn cache_time_value(&self) -> Option<i64> {
+            self.0
+                .lock()
+                .expect("callback answer lock poisoned")
+                .cache_time
+        }
+
         pub fn disable(&self) -> Result<()> {
             self.mutate_before_answer(|state| state.disabled = true)
         }
@@ -365,6 +395,27 @@ pub mod callback_answer {
             assert!(request.contains("/answerCallbackQuery "));
             assert!(request.contains(r#""callback_query_id":"callback-1""#));
             assert!(request.contains(r#""text":"handled""#));
+        }
+
+        #[test]
+        fn callback_answer_values_are_readable_and_lock_after_answering() {
+            let answer = CallbackAnswer::configured(CallbackAnswerState::default());
+            answer.text("ready").unwrap();
+            answer.show_alert(true).unwrap();
+            answer.url("https://example.com").unwrap();
+            answer.cache_time(15).unwrap();
+
+            assert_eq!(answer.text_value().as_deref(), Some("ready"));
+            assert_eq!(answer.show_alert_value(), Some(true));
+            assert_eq!(answer.url_value().as_deref(), Some("https://example.com"));
+            assert_eq!(answer.cache_time_value(), Some(15));
+            assert!(!answer.answered());
+            assert!(!answer.disabled());
+
+            answer.mark_answered().unwrap();
+            assert!(answer.answered());
+            assert!(answer.text("too late").is_err());
+            assert_eq!(answer.text_value().as_deref(), Some("ready"));
         }
 
         #[tokio::test]
