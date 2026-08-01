@@ -2244,6 +2244,25 @@ pub mod formatting {
     }
 
     impl RenderedText {
+        pub fn into_fields(
+            self,
+            text_key: &str,
+            entities_key: &str,
+            parse_mode_key: &str,
+            replace_parse_mode: bool,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            let mut fields = serde_json::Map::new();
+            fields.insert(text_key.to_owned(), serde_json::Value::String(self.text));
+            fields.insert(
+                entities_key.to_owned(),
+                serde_json::to_value(self.entities)?,
+            );
+            if replace_parse_mode {
+                fields.insert(parse_mode_key.to_owned(), serde_json::Value::Null);
+            }
+            Ok(fields)
+        }
+
         pub fn into_send_message(self, chat_id: impl Into<ChatId>) -> SendMessage {
             let mut method = SendMessage::new(chat_id, self.text).entities(self.entities);
             method
@@ -2367,6 +2386,22 @@ pub mod formatting {
             self
         }
 
+        /// Replaces the root body while preserving a root entity's type and
+        /// parameters, matching `Text.replace(...)` in aiogram.
+        pub fn replace(&self, items: impl IntoIterator<Item = impl Into<Text>>) -> Self {
+            let replacement = Self::concat(items).body;
+            match self.body.as_slice() {
+                [TextNode::Entity { kind, params, .. }] => Self {
+                    body: vec![TextNode::Entity {
+                        kind: kind.clone(),
+                        params: params.clone(),
+                        body: replacement,
+                    }],
+                },
+                _ => Self { body: replacement },
+            }
+        }
+
         pub fn entity(kind: impl Into<String>, body: impl Into<Text>) -> Self {
             Self::entity_with(kind, body.into(), EntityParams::default())
         }
@@ -2440,6 +2475,58 @@ pub mod formatting {
             render_nodes(&self.body, &mut text, &mut entities, true);
             entities.sort_by_key(|entity| entity.offset);
             RenderedText { text, entities }
+        }
+
+        pub fn as_fields(
+            &self,
+            text_key: &str,
+            entities_key: &str,
+            parse_mode_key: &str,
+            replace_parse_mode: bool,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.render()
+                .into_fields(text_key, entities_key, parse_mode_key, replace_parse_mode)
+        }
+
+        pub fn as_kwargs(&self) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.as_fields("text", "entities", "parse_mode", true)
+        }
+
+        pub fn as_caption_kwargs(
+            &self,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.as_fields("caption", "caption_entities", "parse_mode", true)
+        }
+
+        pub fn as_poll_question_kwargs(
+            &self,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.as_fields("question", "question_entities", "question_parse_mode", true)
+        }
+
+        pub fn as_poll_explanation_kwargs(
+            &self,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.as_fields(
+                "explanation",
+                "explanation_entities",
+                "explanation_parse_mode",
+                true,
+            )
+        }
+
+        pub fn as_gift_text_kwargs(
+            &self,
+        ) -> serde_json::Result<serde_json::Map<String, serde_json::Value>> {
+            self.as_fields("text", "text_entities", "text_parse_mode", true)
+        }
+
+        pub fn as_pretty_string(&self, indent: bool) -> String {
+            if indent {
+                format!("{self:#?}")
+            } else {
+                format!("{self:?}")
+            }
         }
 
         pub fn into_send_message(self, chat_id: impl Into<ChatId>) -> SendMessage {
@@ -3852,6 +3939,44 @@ mod tests {
                 .is_err()
         );
         assert!(formatted.slice_utf16(0..100).is_err());
+    }
+
+    #[test]
+    fn formatted_text_exports_fields_and_replaces_root() {
+        let original = bold(Text::plain("old ").then(italic("value")));
+        let replaced = original.replace([Text::plain("new ").then(italic("value"))]);
+        let rendered = replaced.render();
+        assert_eq!(rendered.text, "new value");
+        assert_eq!(
+            rendered
+                .entities
+                .iter()
+                .map(|entity| (entity.kind.as_str(), entity.offset, entity.length))
+                .collect::<Vec<_>>(),
+            [("bold", 0, 9), ("italic", 4, 5)]
+        );
+
+        let kwargs = replaced.as_kwargs().unwrap();
+        assert_eq!(kwargs["text"], "new value");
+        assert_eq!(kwargs["entities"][0]["type"], "bold");
+        assert!(kwargs["parse_mode"].is_null());
+        let caption = replaced.as_caption_kwargs().unwrap();
+        assert_eq!(caption["caption"], "new value");
+        assert!(caption["parse_mode"].is_null());
+        let question = replaced.as_poll_question_kwargs().unwrap();
+        assert!(question["question_parse_mode"].is_null());
+        let explanation = replaced.as_poll_explanation_kwargs().unwrap();
+        assert!(explanation["explanation_parse_mode"].is_null());
+        let gift = replaced.as_gift_text_kwargs().unwrap();
+        assert!(gift["text_parse_mode"].is_null());
+        let custom = replaced
+            .as_fields("body", "body_entities", "body_parse_mode", false)
+            .unwrap();
+        assert_eq!(custom["body"], "new value");
+        assert!(custom.get("body_parse_mode").is_none());
+        assert!(replaced.as_pretty_string(true).contains("Text"));
+
+        assert_eq!(Text::plain("old").replace(["new"]).render().text, "new");
     }
 
     #[test]
