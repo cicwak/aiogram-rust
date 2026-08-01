@@ -1960,6 +1960,22 @@ pub mod formatting {
         fn with_formatted_caption(self, rendered: RenderedText) -> Self;
     }
 
+    pub trait WithFormattedText: Sized {
+        fn with_formatted_text(self, rendered: RenderedText) -> Self;
+    }
+
+    pub trait WithFormattedGiftText: Sized {
+        fn with_formatted_gift_text(self, rendered: RenderedText) -> Self;
+    }
+
+    pub trait WithFormattedPollQuestion: Sized {
+        fn with_formatted_poll_question(self, rendered: RenderedText) -> Self;
+    }
+
+    pub trait WithFormattedPollExplanation: Sized {
+        fn with_formatted_poll_explanation(self, rendered: RenderedText) -> Self;
+    }
+
     impl Text {
         pub fn new() -> Self {
             Self::default()
@@ -2099,6 +2115,22 @@ pub mod formatting {
             target.with_formatted_caption(self.render())
         }
 
+        pub fn apply_text<T: WithFormattedText>(&self, target: T) -> T {
+            target.with_formatted_text(self.render())
+        }
+
+        pub fn apply_gift_text<T: WithFormattedGiftText>(&self, target: T) -> T {
+            target.with_formatted_gift_text(self.render())
+        }
+
+        pub fn apply_poll_question<T: WithFormattedPollQuestion>(&self, target: T) -> T {
+            target.with_formatted_poll_question(self.render())
+        }
+
+        pub fn apply_poll_explanation<T: WithFormattedPollExplanation>(&self, target: T) -> T {
+            target.with_formatted_poll_explanation(self.render())
+        }
+
         pub fn as_html(&self) -> String {
             decorate_nodes(&self.body, Decoration::Html)
         }
@@ -2154,6 +2186,96 @@ pub mod formatting {
         crate::methods::SendVideo,
         crate::methods::SendVoice,
     );
+
+    macro_rules! formatted_required_text_targets {
+        ($($target:ty),+ $(,)?) => {
+            $(
+                impl WithFormattedText for $target {
+                    fn with_formatted_text(mut self, rendered: RenderedText) -> Self {
+                        self.text = rendered.text;
+                        self.entities = Some(rendered.entities);
+                        self.parse_mode = None;
+                        self.extra.insert(
+                            "parse_mode".to_owned(),
+                            serde_json::Value::Null,
+                        );
+                        self
+                    }
+                }
+            )+
+        };
+    }
+
+    formatted_required_text_targets!(
+        crate::methods::EditEphemeralMessageText,
+        crate::methods::SendMessage,
+    );
+
+    macro_rules! formatted_optional_text_targets {
+        ($($target:ty),+ $(,)?) => {
+            $(
+                impl WithFormattedText for $target {
+                    fn with_formatted_text(mut self, rendered: RenderedText) -> Self {
+                        self.text = Some(rendered.text);
+                        self.entities = Some(rendered.entities);
+                        self.parse_mode = None;
+                        self.extra.insert(
+                            "parse_mode".to_owned(),
+                            serde_json::Value::Null,
+                        );
+                        self
+                    }
+                }
+            )+
+        };
+    }
+
+    formatted_optional_text_targets!(
+        crate::methods::EditMessageText,
+        crate::methods::SendMessageDraft,
+    );
+
+    macro_rules! formatted_gift_text_targets {
+        ($($target:ty),+ $(,)?) => {
+            $(
+                impl WithFormattedGiftText for $target {
+                    fn with_formatted_gift_text(self, rendered: RenderedText) -> Self {
+                        let mut target = self.text(rendered.text);
+                        target.text_entities = Some(rendered.entities);
+                        target.text_parse_mode = None;
+                        target
+                    }
+                }
+            )+
+        };
+    }
+
+    formatted_gift_text_targets!(
+        crate::methods::GiftPremiumSubscription,
+        crate::methods::SendGift,
+    );
+
+    impl WithFormattedPollQuestion for crate::methods::SendPoll {
+        fn with_formatted_poll_question(mut self, rendered: RenderedText) -> Self {
+            self.question = rendered.text;
+            self.question_entities = Some(rendered.entities);
+            self.question_parse_mode = None;
+            self.extra
+                .insert("question_parse_mode".to_owned(), serde_json::Value::Null);
+            self
+        }
+    }
+
+    impl WithFormattedPollExplanation for crate::methods::SendPoll {
+        fn with_formatted_poll_explanation(mut self, rendered: RenderedText) -> Self {
+            self.explanation = Some(rendered.text);
+            self.explanation_entities = Some(rendered.entities);
+            self.explanation_parse_mode = None;
+            self.extra
+                .insert("explanation_parse_mode".to_owned(), serde_json::Value::Null);
+            self
+        }
+    }
 
     #[derive(Debug, Clone, Copy)]
     struct EntitySpan<'a> {
@@ -3316,6 +3438,37 @@ mod tests {
         let request = bot.prepare_request(&photo).unwrap();
         assert_eq!(request.payload["caption"], "Photo caption");
         assert_eq!(request.payload["caption_entities"][0]["type"], "italic");
+        assert!(request.payload.get("parse_mode").is_none());
+
+        let poll = Text::plain("Question ")
+            .then(bold("one"))
+            .apply_poll_question(crate::methods::SendPoll::new(42_i64, "old", Vec::new()));
+        let poll = Text::plain("Because ")
+            .then(italic("two"))
+            .apply_poll_explanation(poll);
+        let request = bot.prepare_request(&poll).unwrap();
+        assert_eq!(request.payload["question"], "Question one");
+        assert_eq!(request.payload["question_entities"][0]["type"], "bold");
+        assert!(request.payload.get("question_parse_mode").is_none());
+        assert_eq!(request.payload["explanation"], "Because two");
+        assert_eq!(request.payload["explanation_entities"][0]["type"], "italic");
+        assert!(request.payload.get("explanation_parse_mode").is_none());
+        assert_eq!(request.payload["description_parse_mode"], "HTML");
+
+        let gift = Text::plain("Gift ")
+            .then(bold("note"))
+            .apply_gift_text(crate::methods::SendGift::new("gift-id"));
+        let payload = serde_json::to_value(gift).unwrap();
+        assert_eq!(payload["text"], "Gift note");
+        assert_eq!(payload["text_entities"][0]["type"], "bold");
+        assert!(payload.get("text_parse_mode").is_none());
+
+        let edit = Text::plain("Edited ")
+            .then(italic("text"))
+            .apply_text(crate::methods::EditMessageText::new());
+        let request = bot.prepare_request(&edit).unwrap();
+        assert_eq!(request.payload["text"], "Edited text");
+        assert_eq!(request.payload["entities"][0]["type"], "italic");
         assert!(request.payload.get("parse_mode").is_none());
     }
 
