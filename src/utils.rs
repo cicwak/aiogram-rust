@@ -3509,7 +3509,7 @@ mod tests {
         let json = serde_json::to_value(method).unwrap();
         assert_eq!(json["text"], "hello world");
         assert_eq!(json["entities"][0]["offset"], 5);
-        assert!(json.get("parse_mode").is_none());
+        assert!(json["parse_mode"].is_null());
 
         assert_eq!(
             super::formatting::as_marked_section(
