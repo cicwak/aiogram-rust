@@ -1910,7 +1910,11 @@ pub mod formatting {
 
     impl RenderedText {
         pub fn into_send_message(self, chat_id: impl Into<ChatId>) -> SendMessage {
-            SendMessage::new(chat_id, self.text).entities(self.entities)
+            let mut method = SendMessage::new(chat_id, self.text).entities(self.entities);
+            method
+                .extra
+                .insert("parse_mode".to_owned(), serde_json::Value::Null);
+            method
         }
 
         pub fn as_html(&self) -> Result<String> {
@@ -1946,6 +1950,14 @@ pub mod formatting {
     #[derive(Debug, Clone, Default, PartialEq)]
     pub struct Text {
         body: Vec<TextNode>,
+    }
+
+    /// A Bot API method that accepts `caption` and `caption_entities`.
+    ///
+    /// Applying formatted text also inserts the internal explicit-null marker
+    /// used by [`crate::Bot`] to suppress a configured default parse mode.
+    pub trait WithFormattedCaption: Sized {
+        fn with_formatted_caption(self, rendered: RenderedText) -> Self;
     }
 
     impl Text {
@@ -2083,6 +2095,10 @@ pub mod formatting {
             self.render().into_send_message(chat_id)
         }
 
+        pub fn apply_caption<T: WithFormattedCaption>(&self, target: T) -> T {
+            target.with_formatted_caption(self.render())
+        }
+
         pub fn as_html(&self) -> String {
             decorate_nodes(&self.body, Decoration::Html)
         }
@@ -2103,6 +2119,41 @@ pub mod formatting {
             Self::plain(value)
         }
     }
+
+    macro_rules! formatted_caption_targets {
+        ($($target:ty),+ $(,)?) => {
+            $(
+                impl WithFormattedCaption for $target {
+                    fn with_formatted_caption(mut self, rendered: RenderedText) -> Self {
+                        self.caption = Some(rendered.text);
+                        self.caption_entities = Some(rendered.entities);
+                        self.parse_mode = None;
+                        self.extra.insert(
+                            "parse_mode".to_owned(),
+                            serde_json::Value::Null,
+                        );
+                        self
+                    }
+                }
+            )+
+        };
+    }
+
+    formatted_caption_targets!(
+        crate::methods::CopyMessage,
+        crate::methods::EditEphemeralMessageCaption,
+        crate::methods::EditMessageCaption,
+        crate::methods::EditStory,
+        crate::methods::PostStory,
+        crate::methods::SendAnimation,
+        crate::methods::SendAudio,
+        crate::methods::SendDocument,
+        crate::methods::SendLivePhoto,
+        crate::methods::SendPaidMedia,
+        crate::methods::SendPhoto,
+        crate::methods::SendVideo,
+        crate::methods::SendVoice,
+    );
 
     #[derive(Debug, Clone, Copy)]
     struct EntitySpan<'a> {
@@ -3242,6 +3293,30 @@ mod tests {
         assert!(formatted.slice_utf16(1..2).is_err());
         assert!(formatted.slice_utf16(12..11).is_err());
         assert!(formatted.slice_utf16(0..100).is_err());
+    }
+
+    #[test]
+    fn formatted_text_suppresses_default_parse_mode_for_text_and_captions() {
+        let bot = crate::Bot::builder("123456:abcdefghijklmnopqrstuvwxyzABCDE")
+            .defaults(crate::DefaultBotProperties::default().parse_mode("HTML"))
+            .build()
+            .unwrap();
+
+        let message = Text::plain("Hello, ")
+            .then(bold("world"))
+            .into_send_message(42_i64);
+        let request = bot.prepare_request(&message).unwrap();
+        assert_eq!(request.payload["text"], "Hello, world");
+        assert_eq!(request.payload["entities"][0]["type"], "bold");
+        assert!(request.payload.get("parse_mode").is_none());
+
+        let photo = Text::plain("Photo ")
+            .then(italic("caption"))
+            .apply_caption(crate::methods::SendPhoto::new(42_i64, "telegram-file-id"));
+        let request = bot.prepare_request(&photo).unwrap();
+        assert_eq!(request.payload["caption"], "Photo caption");
+        assert_eq!(request.payload["caption_entities"][0]["type"], "italic");
+        assert!(request.payload.get("parse_mode").is_none());
     }
 
     #[test]
