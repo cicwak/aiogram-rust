@@ -1,0 +1,38 @@
+[port]
+name = "aiogram"
+version = "0.1.0"
+
+[upstream.aiogram]
+repository = "https://github.com/aiogram/aiogram.git"
+branch = "dev-3.x"
+version = "3.30.0"
+commit = "c1b0353ce3d3f8d70f90469038939a956e9e09f7"
+
+[upstream.telegram_bot_api]
+version = "10.2"
+release_date = "2026-07-14"
+
+[surface]
+schema_types = 388
+butcher_type_entities = 390
+aiogram_union_aliases = 35
+aiogram_enums = 38
+aiogram_bound_aliases = 187
+generated_python_type_modules = 430
+mapped_python_type_annotations = 1896
+schema_methods = 185
+mapped_python_method_annotations = 980
+upstream_test_modules = 289
+manual_python_modules = 95
+
+[parity]
+status = "parity-candidate"
+core_client = "implemented"
+dispatcher_router = "implemented"
+filters = "implemented"
+fsm = "implemented"
+middleware = "implemented"
+request_middleware = "implemented"
+webhook = "implemented"
+api_types = "implemented"
+api_methods = "implemented"
