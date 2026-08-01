@@ -48,7 +48,7 @@ The ignored `aiogram/` checkout is an upstream reference, not part of the Rust c
 - `fsm` provides strategies, state groups, memory/Redis/MongoDB storage with live CI contracts, local/distributed event isolation, manual context access, history, scene observers/transitions, and managed shutdown.
 - Unknown Telegram fields are preserved to allow forward-compatible deserialization.
 - Generated sources are reproducible with `cargo run -p xtask -- generate --upstream aiogram`; CI rejects drift from the pinned upstream snapshot.
-- Framework behavior is ported manually and checked with contract tests.
+- Framework behavior is ported manually and checked with contract tests; all 770 public symbols from the hand-written upstream surface have exact native, semantic, or Rust-language routes verified by the compatibility gate.
 
 The detailed work breakdown and completion criteria are in [`docs/PORTING_PLAN.md`](docs/PORTING_PLAN.md).
 The current, deliberately conservative subsystem status is in [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md).

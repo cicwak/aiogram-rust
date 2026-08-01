@@ -21,6 +21,7 @@ include = [
     "/LICENSE",
     "/NOTICE",
     "/compatibility.toml",
+    "/compatibility/**",
 ]
 keywords = ["telegram", "bot", "async", "framework", "aiogram"]
 categories = ["api-bindings", "asynchronous", "web-programming"]

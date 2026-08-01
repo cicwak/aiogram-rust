@@ -41,33 +41,103 @@ def require(actual: object, expected: object, label: str) -> None:
         raise RuntimeError(f"{label}: expected {expected!r}, got {actual!r}")
 
 
-def manual_public_surface(root: Path) -> tuple[set[str], set[str], set[str], str]:
+def manual_public_surface(
+    root: Path,
+) -> tuple[set[str], set[str], set[str], dict[str, list[str]], str]:
     classes: set[str] = set()
     functions: set[str] = set()
     methods: set[str] = set()
+    symbols_by_module: dict[str, list[str]] = {}
     for path in sorted(root.rglob("*.py")):
         relative = path.relative_to(root)
         if relative.parts[0] in {"types", "methods", "enums"}:
             continue
         module = ".".join(relative.with_suffix("").parts)
+        module_symbols: list[str] = []
         for node in ast.parse(path.read_text()).body:
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                 class_name = f"{module}.{node.name}"
                 classes.add(class_name)
+                module_symbols.append(f"class:{class_name}")
                 for member in node.body:
                     if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         if not member.name.startswith("_"):
-                            methods.add(f"{class_name}.{member.name}")
+                            method_name = f"{class_name}.{member.name}"
+                            methods.add(method_name)
+                            module_symbols.append(f"method:{method_name}")
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if not node.name.startswith("_"):
-                    functions.add(f"{module}.{node.name}")
+                    function_name = f"{module}.{node.name}"
+                    functions.add(function_name)
+                    module_symbols.append(f"function:{function_name}")
+        if module_symbols:
+            symbols_by_module[module] = sorted(set(module_symbols))
     inventory = [
         *(f"class:{name}" for name in sorted(classes)),
         *(f"function:{name}" for name in sorted(functions)),
         *(f"method:{name}" for name in sorted(methods)),
     ]
     digest = hashlib.sha256(("\n".join(inventory) + "\n").encode()).hexdigest()
-    return classes, functions, methods, digest
+    return classes, functions, methods, symbols_by_module, digest
+
+
+def manual_api_coverage(
+    symbols_by_module: dict[str, list[str]],
+) -> tuple[int, str, dict[str, int]]:
+    route_path = ROOT / "compatibility" / "manual-api-routes.toml"
+    document = tomllib.loads(route_path.read_text())
+    routes = document.get("route", [])
+    if not isinstance(routes, list):
+        raise RuntimeError(f"route must be an array of tables in {route_path}")
+
+    by_module: dict[str, dict[str, object]] = {}
+    modes = {"native", "semantic", "language"}
+    for route in routes:
+        if not isinstance(route, dict):
+            raise RuntimeError(f"invalid route in {route_path}: {route!r}")
+        module = route.get("python_module")
+        mode = route.get("mode")
+        rust = route.get("rust")
+        evidence = route.get("evidence")
+        if not isinstance(module, str) or not module:
+            raise RuntimeError(f"route is missing python_module in {route_path}")
+        if module in by_module:
+            raise RuntimeError(f"duplicate manual API route for {module}")
+        if mode not in modes:
+            raise RuntimeError(f"invalid coverage mode for {module}: {mode!r}")
+        if not isinstance(rust, list) or not rust or not all(
+            isinstance(value, str) and value for value in rust
+        ):
+            raise RuntimeError(f"route {module} needs non-empty Rust symbols")
+        if not isinstance(evidence, list) or not evidence or not all(
+            isinstance(value, str) and value for value in evidence
+        ):
+            raise RuntimeError(f"route {module} needs non-empty evidence paths")
+        for value in evidence:
+            evidence_path = ROOT / value.split("#", 1)[0]
+            if not evidence_path.exists():
+                raise RuntimeError(
+                    f"manual API evidence for {module} does not exist: {value}"
+                )
+        by_module[module] = route
+
+    require(
+        set(by_module),
+        set(symbols_by_module),
+        "manual Python module coverage",
+    )
+    inventory: list[str] = []
+    mode_counts = {mode: 0 for mode in sorted(modes)}
+    for module, symbols in sorted(symbols_by_module.items()):
+        route = by_module[module]
+        mode = str(route["mode"])
+        rust = ",".join(sorted(str(value) for value in route["rust"]))
+        evidence = ",".join(sorted(str(value) for value in route["evidence"]))
+        for symbol in symbols:
+            inventory.append(f"{symbol}=>{mode}|{rust}|{evidence}")
+            mode_counts[mode] += 1
+    digest = hashlib.sha256(("\n".join(inventory) + "\n").encode()).hexdigest()
+    return len(inventory), digest, mode_counts
 
 
 def method_default_surface(root: Path) -> tuple[set[str], str]:
@@ -186,7 +256,13 @@ def main() -> None:
         surface["manual_python_modules"],
         "manual Python framework module count",
     )
-    public_classes, public_functions, public_methods, public_surface_digest = (
+    (
+        public_classes,
+        public_functions,
+        public_methods,
+        symbols_by_module,
+        public_surface_digest,
+    ) = (
         manual_public_surface(UPSTREAM / "aiogram")
     )
     require(
@@ -209,6 +285,25 @@ def main() -> None:
         surface["manual_python_public_surface_sha256"],
         "manual Python public surface fingerprint",
     )
+    covered_symbols, coverage_digest, coverage_modes = manual_api_coverage(
+        symbols_by_module
+    )
+    require(
+        covered_symbols,
+        surface["manual_python_covered_symbols"],
+        "manual Python covered symbol count",
+    )
+    require(
+        coverage_digest,
+        surface["manual_python_coverage_sha256"],
+        "manual Python coverage fingerprint",
+    )
+    for mode, count in coverage_modes.items():
+        require(
+            count,
+            surface[f"manual_python_{mode}_symbols"],
+            f"manual Python {mode} symbol count",
+        )
     method_defaults, method_defaults_digest = method_default_surface(
         UPSTREAM / "aiogram" / "methods"
     )
@@ -275,7 +370,9 @@ def main() -> None:
         "compatibility verified: "
         f"port {compatibility['port']['version']}, "
         f"aiogram {compatibility['upstream']['aiogram']['version']}@{commit[:12]}, "
-        f"Bot API {schema['api']['version']}"
+        f"Bot API {schema['api']['version']}; "
+        f"manual API {covered_symbols}/{covered_symbols} "
+        f"({', '.join(f'{mode}={count}' for mode, count in coverage_modes.items())})"
     )
 
 

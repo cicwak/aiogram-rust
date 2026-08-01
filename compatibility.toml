@@ -30,6 +30,11 @@ manual_python_public_classes = 168
 manual_python_public_functions = 71
 manual_python_public_methods = 531
 manual_python_public_surface_sha256 = "5a21e668be29f66883de4eeb6be1102000427b2cf7d2a825eeb21e8caf83746f"
+manual_python_covered_symbols = 770
+manual_python_native_symbols = 420
+manual_python_semantic_symbols = 335
+manual_python_language_symbols = 15
+manual_python_coverage_sha256 = "3b42d41dbc5ae16f3a500b6bea373d5f83337c1516961223d663e02a0bbf33c7"
 
 [parity]
 status = "parity-candidate"
