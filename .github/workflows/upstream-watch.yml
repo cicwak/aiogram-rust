@@ -1,0 +1,115 @@
+name: Upstream watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t coordinates < <(python3 - <<'PY'
+          import tomllib
+          from pathlib import Path
+          data = tomllib.loads(Path("compatibility.toml").read_text())
+          aiogram = data["upstream"]["aiogram"]
+          print(aiogram["repository"])
+          print(aiogram["branch"])
+          print(aiogram["commit"])
+          print(aiogram["version"])
+          PY
+          )
+          repository="${coordinates[0]}"
+          branch="${coordinates[1]}"
+          pinned_commit="${coordinates[2]}"
+          pinned_version="${coordinates[3]}"
+          {
+            echo "repository=$repository"
+            echo "branch=$branch"
+            echo "pinned_commit=$pinned_commit"
+            echo "pinned_version=$pinned_version"
+          } >> "$GITHUB_OUTPUT"
+          git clone --depth 1 --branch "$branch" "$repository" /tmp/aiogram-upstream
+          echo "latest_commit=$(git -C /tmp/aiogram-upstream rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import ast
+          from pathlib import Path
+          module = ast.parse(Path("/tmp/aiogram-upstream/aiogram/__meta__.py").read_text())
+          values = {}
+          for node in module.body:
+              if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+                  for target in node.targets:
+                      if isinstance(target, ast.Name):
+                          values[target.id] = node.value.value
+          print(f"latest_version={values['__version__']}")
+          print(f"latest_api={values['__api_version__']}")
+          PY
+      - name: Summarize comparison
+        shell: bash
+        env:
+          PINNED_COMMIT: ${{ steps.upstream.outputs.pinned_commit }}
+          PINNED_VERSION: ${{ steps.upstream.outputs.pinned_version }}
+          LATEST_COMMIT: ${{ steps.upstream.outputs.latest_commit }}
+          LATEST_VERSION: ${{ steps.upstream.outputs.latest_version }}
+          LATEST_API: ${{ steps.upstream.outputs.latest_api }}
+        run: |
+          {
+            echo "## aiogram upstream comparison"
+            echo ""
+            echo "- pinned: $PINNED_VERSION at $PINNED_COMMIT"
+            echo "- dev-3.x: $LATEST_VERSION at $LATEST_COMMIT"
+            echo "- latest Bot API baseline: $LATEST_API"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update tracking issue
+        if: steps.upstream.outputs.pinned_commit != steps.upstream.outputs.latest_commit
+        uses: actions/github-script@v7
+        env:
+          PINNED_COMMIT: ${{ steps.upstream.outputs.pinned_commit }}
+          PINNED_VERSION: ${{ steps.upstream.outputs.pinned_version }}
+          LATEST_COMMIT: ${{ steps.upstream.outputs.latest_commit }}
+          LATEST_VERSION: ${{ steps.upstream.outputs.latest_version }}
+          LATEST_API: ${{ steps.upstream.outputs.latest_api }}
+        with:
+          script: |
+            const title = "Upstream aiogram update available";
+            const body = [
+              "The scheduled compatibility check found a newer `dev-3.x` snapshot.",
+              "",
+              `- pinned aiogram: ${process.env.PINNED_VERSION} at \`${process.env.PINNED_COMMIT}\``,
+              `- current dev-3.x: ${process.env.LATEST_VERSION} at \`${process.env.LATEST_COMMIT}\``,
+              `- current Bot API baseline: ${process.env.LATEST_API}`,
+              "",
+              "Update `compatibility.toml`, regenerate sources, run the complete contract suite, and document parity changes before releasing."
+            ].join("\n");
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+            const existing = issues.data.find(issue => issue.title === title && !issue.pull_request);
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }

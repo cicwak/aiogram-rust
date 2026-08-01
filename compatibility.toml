@@ -1,0 +1,49 @@
+[port]
+name = "aiogram"
+version = "0.1.0"
+
+[upstream.aiogram]
+repository = "https://github.com/aiogram/aiogram.git"
+branch = "dev-3.x"
+version = "3.30.0"
+commit = "c1b0353ce3d3f8d70f90469038939a956e9e09f7"
+
+[upstream.telegram_bot_api]
+version = "10.2"
+release_date = "2026-07-14"
+
+[surface]
+schema_types = 388
+butcher_type_entities = 390
+aiogram_union_aliases = 35
+aiogram_enums = 38
+aiogram_bound_aliases = 187
+generated_python_type_modules = 430
+mapped_python_type_annotations = 1896
+schema_methods = 185
+mapped_python_method_annotations = 980
+mapped_python_method_defaults = 41
+python_method_defaults_sha256 = "a08bf4dd3b2ab726e5af87e2c5634c9eca3b9f469585dafceabb435f1a62db40"
+upstream_test_modules = 289
+manual_python_modules = 95
+manual_python_public_classes = 168
+manual_python_public_functions = 71
+manual_python_public_methods = 531
+manual_python_public_surface_sha256 = "5a21e668be29f66883de4eeb6be1102000427b2cf7d2a825eeb21e8caf83746f"
+manual_python_covered_symbols = 770
+manual_python_native_symbols = 420
+manual_python_semantic_symbols = 335
+manual_python_language_symbols = 15
+manual_python_coverage_sha256 = "3b42d41dbc5ae16f3a500b6bea373d5f83337c1516961223d663e02a0bbf33c7"
+
+[parity]
+status = "parity-candidate"
+core_client = "implemented"
+dispatcher_router = "implemented"
+filters = "implemented"
+fsm = "implemented"
+middleware = "implemented"
+request_middleware = "implemented"
+webhook = "implemented"
+api_types = "implemented"
+api_methods = "implemented"

@@ -1,0 +1,465 @@
+# Exact routing for the hand-written public Python surface at the pinned baseline.
+# `native` keeps the same core abstraction, `semantic` exposes an idiomatic Rust
+# equivalent, and `language` is functionality supplied by Rust itself.
+
+[[route]]
+python_module = "client.bot"
+mode = "native"
+rust = ["aiogram::Bot", "aiogram::methods", "aiogram::types::Downloadable"]
+evidence = ["src/bot.rs", "src/bot/generated.rs"]
+
+[[route]]
+python_module = "client.context_controller"
+mode = "semantic"
+rust = ["aiogram::Bot", "aiogram::UpdateContext"]
+evidence = ["src/bot.rs", "src/dispatcher.rs"]
+
+[[route]]
+python_module = "client.default"
+mode = "semantic"
+rust = ["aiogram::DefaultBotProperties", "aiogram::methods::TelegramMethod::DEFAULT_PROPERTIES"]
+evidence = ["src/client.rs", "src/methods/generated.rs"]
+
+[[route]]
+python_module = "client.session.aiohttp"
+mode = "semantic"
+rust = ["aiogram::BotBuilder::client", "reqwest::Client"]
+evidence = ["src/bot.rs", "src/client.rs"]
+
+[[route]]
+python_module = "client.session.base"
+mode = "semantic"
+rust = ["aiogram::Bot", "aiogram::BotRequest", "aiogram::RequestMiddleware"]
+evidence = ["src/bot.rs", "src/client.rs"]
+
+[[route]]
+python_module = "client.session.middlewares.base"
+mode = "native"
+rust = ["aiogram::RequestMiddleware", "aiogram::RequestNext"]
+evidence = ["src/client.rs"]
+
+[[route]]
+python_module = "client.session.middlewares.manager"
+mode = "semantic"
+rust = ["aiogram::BotBuilder::request_middleware", "aiogram::RequestNext"]
+evidence = ["src/bot.rs", "src/client.rs"]
+
+[[route]]
+python_module = "client.session.middlewares.request_logging"
+mode = "native"
+rust = ["aiogram::RequestLogging", "tracing"]
+evidence = ["src/client.rs"]
+
+[[route]]
+python_module = "client.telegram"
+mode = "native"
+rust = ["aiogram::TelegramApiServer"]
+evidence = ["src/client.rs"]
+
+[[route]]
+python_module = "dispatcher.dispatcher"
+mode = "native"
+rust = ["aiogram::Dispatcher"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.event.bases"
+mode = "semantic"
+rust = ["aiogram::Filter", "aiogram::Middleware", "aiogram::ClassHandler"]
+evidence = ["src/dispatcher.rs", "src/filters.rs"]
+
+[[route]]
+python_module = "dispatcher.event.event"
+mode = "semantic"
+rust = ["aiogram::Router", "aiogram::HandlerFlags"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.event.handler"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.event.telegram"
+mode = "semantic"
+rust = ["aiogram::Router", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.flags"
+mode = "semantic"
+rust = ["aiogram::HandlerFlags", "aiogram::Router::event_with_flags"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.middlewares.base"
+mode = "native"
+rust = ["aiogram::Middleware", "aiogram::OuterMiddleware"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.middlewares.data"
+mode = "semantic"
+rust = ["aiogram::UpdateContext", "aiogram::EventContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.middlewares.error"
+mode = "semantic"
+rust = ["aiogram::Router::error", "aiogram::UpdateContext::error"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.middlewares.manager"
+mode = "semantic"
+rust = ["aiogram::Router::middleware", "aiogram::Router::outer_middleware"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.middlewares.user_context"
+mode = "semantic"
+rust = ["aiogram::EventContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "dispatcher.router"
+mode = "native"
+rust = ["aiogram::Router"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "exceptions"
+mode = "semantic"
+rust = ["aiogram::Error", "aiogram::ResponseParameters"]
+evidence = ["src/error.rs"]
+
+[[route]]
+python_module = "filters.base"
+mode = "native"
+rust = ["aiogram::Filter", "aiogram::FnFilter"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "filters.callback_data"
+mode = "semantic"
+rust = ["aiogram::utils::CallbackData", "aiogram::callback_data", "aiogram::filters::callback_data_filter"]
+evidence = ["src/utils.rs", "src/filters.rs"]
+
+[[route]]
+python_module = "filters.chat_member_updated"
+mode = "native"
+rust = ["aiogram::filters::ChatMemberUpdatedFilter", "aiogram::filters::MemberTransition"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "filters.command"
+mode = "native"
+rust = ["aiogram::filters::Command", "aiogram::filters::CommandStart", "aiogram::filters::CommandMatch"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "filters.exception"
+mode = "semantic"
+rust = ["aiogram::filters::ErrorFilter", "aiogram::Error"]
+evidence = ["src/filters.rs", "src/error.rs"]
+
+[[route]]
+python_module = "filters.logic"
+mode = "native"
+rust = ["aiogram::FilterExt", "aiogram::filters::all", "aiogram::filters::either"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "filters.magic_data"
+mode = "semantic"
+rust = ["aiogram::filters::MagicField"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "filters.state"
+mode = "native"
+rust = ["aiogram::filters::StateFilter"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "fsm.context"
+mode = "native"
+rust = ["aiogram::FsmContext"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "fsm.middleware"
+mode = "native"
+rust = ["aiogram::FsmMiddleware"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "fsm.scene"
+mode = "semantic"
+rust = ["aiogram::SceneBuilder", "aiogram::SceneRegistry", "aiogram::ScenesManager", "aiogram::SceneWizard"]
+evidence = ["src/fsm.rs", "examples/scenes.rs", "examples/quiz_scene.rs"]
+
+[[route]]
+python_module = "fsm.state"
+mode = "semantic"
+rust = ["aiogram::State", "aiogram::StatesGroup", "aiogram::states_group"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "fsm.storage.base"
+mode = "native"
+rust = ["aiogram::Storage", "aiogram::StorageKey", "aiogram::KeyBuilder"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "fsm.storage.memory"
+mode = "native"
+rust = ["aiogram::MemoryStorage", "aiogram::SimpleEventIsolation"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "fsm.storage.mongo"
+mode = "native"
+rust = ["aiogram::MongoStorage"]
+evidence = ["src/fsm.rs", ".github/workflows/ci.yml"]
+
+[[route]]
+python_module = "fsm.storage.pymongo"
+mode = "semantic"
+rust = ["aiogram::MongoStorage"]
+evidence = ["src/fsm.rs", ".github/workflows/ci.yml"]
+
+[[route]]
+python_module = "fsm.storage.redis"
+mode = "native"
+rust = ["aiogram::RedisStorage", "aiogram::RedisEventIsolation"]
+evidence = ["src/fsm.rs", ".github/workflows/ci.yml"]
+
+[[route]]
+python_module = "fsm.strategy"
+mode = "native"
+rust = ["aiogram::FsmStrategy"]
+evidence = ["src/fsm.rs"]
+
+[[route]]
+python_module = "handlers.base"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.callback_query"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext::callback_query"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.chat_member"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.chosen_inline_result"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.error"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext::error"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.inline_query"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.message"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext::message"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.poll"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.pre_checkout_query"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "handlers.shipping_query"
+mode = "semantic"
+rust = ["aiogram::ClassHandler", "aiogram::UpdateContext"]
+evidence = ["src/dispatcher.rs"]
+
+[[route]]
+python_module = "utils.auth_widget"
+mode = "native"
+rust = ["aiogram::utils::web_app::check_login_widget_integrity"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.backoff"
+mode = "native"
+rust = ["aiogram::utils::backoff::Backoff", "aiogram::utils::backoff::BackoffConfig"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.callback_answer"
+mode = "native"
+rust = ["aiogram::utils::callback_answer::CallbackAnswer", "aiogram::utils::callback_answer::CallbackAnswerMiddleware"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.chat_action"
+mode = "native"
+rust = ["aiogram::utils::chat_action::ChatActionSender", "aiogram::utils::chat_action::ChatActionMiddleware"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.class_attrs_resolver"
+mode = "language"
+rust = ["Rust traits and explicit builder composition"]
+evidence = ["src/fsm.rs", "src/dispatcher.rs"]
+
+[[route]]
+python_module = "utils.dataclass"
+mode = "language"
+rust = ["Rust structs and derive macros"]
+evidence = ["src/types/generated.rs", "src/methods/generated.rs"]
+
+[[route]]
+python_module = "utils.deep_linking"
+mode = "native"
+rust = ["aiogram::utils::deep_linking"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.formatting"
+mode = "semantic"
+rust = ["aiogram::utils::formatting::Text", "aiogram::utils::formatting::RenderedText"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.i18n.context"
+mode = "semantic"
+rust = ["aiogram::I18nContext", "aiogram::LazyTranslation"]
+evidence = ["src/i18n.rs"]
+
+[[route]]
+python_module = "utils.i18n.core"
+mode = "semantic"
+rust = ["aiogram::I18n", "aiogram::I18nContext"]
+evidence = ["src/i18n.rs"]
+
+[[route]]
+python_module = "utils.i18n.middleware"
+mode = "native"
+rust = ["aiogram::I18nMiddleware", "aiogram::ConstI18nMiddleware", "aiogram::FsmI18nMiddleware"]
+evidence = ["src/i18n.rs"]
+
+[[route]]
+python_module = "utils.keyboard"
+mode = "native"
+rust = ["aiogram::utils::keyboard::InlineKeyboardBuilder", "aiogram::utils::keyboard::ReplyKeyboardBuilder"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.link"
+mode = "native"
+rust = ["aiogram::utils::link"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.magic_filter"
+mode = "semantic"
+rust = ["aiogram::filters::MagicField"]
+evidence = ["src/filters.rs"]
+
+[[route]]
+python_module = "utils.markdown"
+mode = "semantic"
+rust = ["aiogram::utils::formatting HTML and MarkdownV2 helpers"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.media_group"
+mode = "native"
+rust = ["aiogram::utils::media_group::MediaGroupBuilder"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.mixins"
+mode = "language"
+rust = ["Rust Debug, Display, traits, ownership, and typed context"]
+evidence = ["src/lib.rs", "src/dispatcher.rs"]
+
+[[route]]
+python_module = "utils.mypy_hacks"
+mode = "language"
+rust = ["Rust compiler type checking"]
+evidence = ["Cargo.toml"]
+
+[[route]]
+python_module = "utils.payload"
+mode = "native"
+rust = ["aiogram::utils::payload"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.serialization"
+mode = "semantic"
+rust = ["aiogram::utils::serialization", "serde"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.text_decorations"
+mode = "semantic"
+rust = ["aiogram::utils::formatting HTML and MarkdownV2 entity rendering"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.token"
+mode = "native"
+rust = ["aiogram::utils::token"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.warnings"
+mode = "language"
+rust = ["Rust deprecation attributes and tracing"]
+evidence = ["src/lib.rs", "Cargo.toml"]
+
+[[route]]
+python_module = "utils.web_app"
+mode = "native"
+rust = ["aiogram::utils::web_app"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "utils.web_app_signature"
+mode = "native"
+rust = ["aiogram::utils::web_app Ed25519 validation"]
+evidence = ["src/utils.rs"]
+
+[[route]]
+python_module = "webhook.aiohttp_server"
+mode = "semantic"
+rust = ["aiogram::webhook", "aiogram::webhook::axum_integration"]
+evidence = ["src/webhook.rs"]
+
+[[route]]
+python_module = "webhook.security"
+mode = "native"
+rust = ["aiogram::webhook::IpFilter", "aiogram::webhook::verify_secret_token"]
+evidence = ["src/webhook.rs"]
