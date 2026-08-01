@@ -3,7 +3,7 @@
 An ergonomic, fully asynchronous Rust port of Python's [aiogram](https://github.com/aiogram/aiogram).
 The target is behavioral and feature parity while using idiomatic Rust APIs, static typing, and Tokio.
 
-> Status: parity candidate for the pinned aiogram `3.30.0` baseline. The implementation matrix has no known capability gaps, but `1.0.0` and publication remain gated on the final API/release review.
+> Status: published parity candidate for the pinned aiogram `3.30.0` baseline. The implementation matrix has no known capability gaps; the conservative `1.0.0` declaration remains gated on the final API review.
 
 ## Quick start
 
@@ -65,7 +65,13 @@ upstream example tree, plus callbacks, handler flags, GNU gettext, bound methods
 and `Message::send_copy`. See [`docs/EXAMPLE_PARITY.md`](docs/EXAMPLE_PARITY.md)
 for the explicit mapping.
 
-Tag-based GitHub releases run the complete compatibility gate and attach a verified `.crate` package. crates.io publication remains a separate explicit operation.
+The crate is published on [crates.io](https://crates.io/crates/aiogram) and
+documented on [docs.rs](https://docs.rs/aiogram). Tag-based releases require a
+`v<crate-version>` tag, run the complete compatibility gate, publish the same
+version to crates.io through short-lived OIDC credentials, and create a GitHub
+release with the verified `.crate` package attached. The crates.io trusted
+publisher is restricted to this repository, the `release.yml` workflow, and the
+`release` GitHub environment; no long-lived registry token is stored in GitHub.
 
 ## License
 

@@ -36,7 +36,7 @@ Idiomatic Rust APIs may differ syntactically from Python decorators and runtime 
 - [x] M6: webhook adapters/replies, Axum integration and live HTTP lifecycle contract.
 - [x] M7: utilities, i18n, WebApp validation and class-style handlers.
 - [x] M8: upstream example parity, contract tests, public API map, docs and release automation.
-- [ ] M9: `1.0.0`, full parity declaration, GitHub and crates.io publication.
+- [ ] M9: `1.0.0` and the final full-parity declaration. GitHub and crates.io publication are complete for the `0.1.x` parity-candidate line.
 
 ## Current implemented surface
 

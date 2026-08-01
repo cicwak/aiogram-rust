@@ -9,6 +9,7 @@ edition = "2024"
 rust-version = "1.88"
 description = "An ergonomic asynchronous Telegram Bot API framework for Rust, ported from aiogram"
 documentation = "https://docs.rs/aiogram"
+repository = "https://github.com/cicwak/aiogram-rust"
 license = "MIT"
 readme = "README.md"
 include = [
