@@ -28,6 +28,7 @@ pub mod token {
 }
 
 pub mod callback_answer {
+    use std::fmt;
     use std::sync::{Arc, Mutex};
 
     use async_trait::async_trait;
@@ -52,10 +53,10 @@ pub mod callback_answer {
     pub struct CallbackAnswerConfig {
         pre: Option<bool>,
         disabled: Option<bool>,
-        text: Option<String>,
-        show_alert: Option<bool>,
-        url: Option<String>,
-        cache_time: Option<i64>,
+        text: Option<Option<String>>,
+        show_alert: Option<Option<bool>>,
+        url: Option<Option<String>>,
+        cache_time: Option<Option<i64>>,
     }
 
     impl CallbackAnswerConfig {
@@ -74,22 +75,42 @@ pub mod callback_answer {
         }
 
         pub fn text(mut self, value: impl Into<String>) -> Self {
-            self.text = Some(value.into());
+            self.text = Some(Some(value.into()));
+            self
+        }
+
+        pub fn clear_text(mut self) -> Self {
+            self.text = Some(None);
             self
         }
 
         pub fn show_alert(mut self, value: bool) -> Self {
-            self.show_alert = Some(value);
+            self.show_alert = Some(Some(value));
+            self
+        }
+
+        pub fn clear_show_alert(mut self) -> Self {
+            self.show_alert = Some(None);
             self
         }
 
         pub fn url(mut self, value: impl Into<String>) -> Self {
-            self.url = Some(value.into());
+            self.url = Some(Some(value.into()));
+            self
+        }
+
+        pub fn clear_url(mut self) -> Self {
+            self.url = Some(None);
             self
         }
 
         pub fn cache_time(mut self, value: i64) -> Self {
-            self.cache_time = Some(value);
+            self.cache_time = Some(Some(value));
+            self
+        }
+
+        pub fn clear_cache_time(mut self) -> Self {
+            self.cache_time = Some(None);
             self
         }
     }
@@ -156,16 +177,32 @@ pub mod callback_answer {
             self.mutate_before_answer(|state| state.text = Some(value.into()))
         }
 
+        pub fn clear_text(&self) -> Result<()> {
+            self.mutate_before_answer(|state| state.text = None)
+        }
+
         pub fn show_alert(&self, value: bool) -> Result<()> {
             self.mutate_before_answer(|state| state.show_alert = Some(value))
+        }
+
+        pub fn clear_show_alert(&self) -> Result<()> {
+            self.mutate_before_answer(|state| state.show_alert = None)
         }
 
         pub fn url(&self, value: impl Into<String>) -> Result<()> {
             self.mutate_before_answer(|state| state.url = Some(value.into()))
         }
 
+        pub fn clear_url(&self) -> Result<()> {
+            self.mutate_before_answer(|state| state.url = None)
+        }
+
         pub fn cache_time(&self, value: i64) -> Result<()> {
             self.mutate_before_answer(|state| state.cache_time = Some(value))
+        }
+
+        pub fn clear_cache_time(&self) -> Result<()> {
+            self.mutate_before_answer(|state| state.cache_time = None)
         }
 
         fn mutate_before_answer(
@@ -197,6 +234,30 @@ pub mod callback_answer {
                 .lock()
                 .map(|mut state| state.answered = true)
                 .map_err(|_| Error::Handler("callback answer lock poisoned".to_owned()))
+        }
+    }
+
+    impl fmt::Display for CallbackAnswer {
+        fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let state = self.0.lock().map_err(|_| fmt::Error)?;
+            write!(
+                formatter,
+                "CallbackAnswer(answered={}, disabled={}",
+                state.answered, state.disabled
+            )?;
+            if let Some(text) = &state.text {
+                write!(formatter, ", text={text:?}")?;
+            }
+            if let Some(show_alert) = state.show_alert {
+                write!(formatter, ", show_alert={show_alert}")?;
+            }
+            if let Some(url) = &state.url {
+                write!(formatter, ", url={url:?}")?;
+            }
+            if let Some(cache_time) = state.cache_time {
+                write!(formatter, ", cache_time={cache_time}")?;
+            }
+            formatter.write_str(")")
         }
     }
 
@@ -286,19 +347,19 @@ pub mod callback_answer {
                 text: overrides
                     .as_ref()
                     .and_then(|config| config.text.clone())
-                    .or_else(|| self.text.clone()),
+                    .unwrap_or_else(|| self.text.clone()),
                 show_alert: overrides
                     .as_ref()
                     .and_then(|config| config.show_alert)
-                    .or(self.show_alert),
+                    .unwrap_or(self.show_alert),
                 url: overrides
                     .as_ref()
                     .and_then(|config| config.url.clone())
-                    .or_else(|| self.url.clone()),
+                    .unwrap_or_else(|| self.url.clone()),
                 cache_time: overrides
                     .as_ref()
                     .and_then(|config| config.cache_time)
-                    .or(self.cache_time),
+                    .unwrap_or(self.cache_time),
             });
             if pre {
                 Self::answer(&context, &answer).await?;
@@ -411,6 +472,20 @@ pub mod callback_answer {
             assert_eq!(answer.cache_time_value(), Some(15));
             assert!(!answer.answered());
             assert!(!answer.disabled());
+            assert_eq!(
+                answer.to_string(),
+                "CallbackAnswer(answered=false, disabled=false, text=\"ready\", show_alert=true, url=\"https://example.com\", cache_time=15)"
+            );
+
+            answer.clear_text().unwrap();
+            answer.clear_show_alert().unwrap();
+            answer.clear_url().unwrap();
+            answer.clear_cache_time().unwrap();
+            assert_eq!(answer.text_value(), None);
+            assert_eq!(answer.show_alert_value(), None);
+            assert_eq!(answer.url_value(), None);
+            assert_eq!(answer.cache_time_value(), None);
+            answer.text("ready").unwrap();
 
             answer.mark_answered().unwrap();
             assert!(answer.answered());
@@ -451,6 +526,61 @@ pub mod callback_answer {
             let request = request.await.unwrap();
             assert!(request.contains(r#""text":"from flag""#));
             assert!(!request.contains(r#""text":"default""#));
+        }
+
+        #[tokio::test]
+        async fn handler_flag_can_clear_callback_answer_defaults() {
+            let (api_base, request) = mock_server().await;
+            let bot =
+                Bot::with_api_base("123456:abcdefghijklmnopqrstuvwxyzABCDE", api_base).unwrap();
+            let mut router = Router::new();
+            router.middleware(
+                CallbackAnswerMiddleware::new()
+                    .text("default")
+                    .show_alert(true)
+                    .url("https://example.com")
+                    .cache_time(30),
+            );
+            router.event_with_flags(
+                "callback_query",
+                filters::any(),
+                HandlerFlags::new().with(
+                    "callback_answer",
+                    CallbackAnswerConfig::new()
+                        .pre(true)
+                        .clear_text()
+                        .clear_show_alert()
+                        .clear_url()
+                        .clear_cache_time(),
+                ),
+                |context| async move {
+                    let answer = context.dependency::<CallbackAnswer>().unwrap();
+                    assert_eq!(answer.text_value(), None);
+                    assert_eq!(answer.show_alert_value(), None);
+                    assert_eq!(answer.url_value(), None);
+                    assert_eq!(answer.cache_time_value(), None);
+                    Ok(())
+                },
+            );
+            let mut dispatcher = Dispatcher::new();
+            dispatcher.include_router(router);
+            let update = serde_json::from_value(serde_json::json!({
+                "update_id": 1,
+                "callback_query": {
+                    "id": "callback-clear",
+                    "from": {"id": 1, "is_bot": false, "first_name": "Ada"},
+                    "chat_instance": "instance",
+                    "data": "action"
+                }
+            }))
+            .unwrap();
+
+            assert!(dispatcher.feed_update(bot, update).await.unwrap());
+            let request = request.await.unwrap();
+            assert!(!request.contains(r#""text":"default""#));
+            assert!(!request.contains(r#""show_alert":true"#));
+            assert!(!request.contains(r#""url":"https://example.com""#));
+            assert!(!request.contains(r#""cache_time":30"#));
         }
     }
 }
