@@ -1839,6 +1839,7 @@ pub mod serialization {
 
 pub mod formatting {
     use std::cmp::Reverse;
+    use std::ops::Range;
 
     use crate::error::{Error, Result};
     use crate::methods::SendMessage;
@@ -1970,6 +1971,53 @@ pub mod formatting {
             let mut text = String::new();
             render_nodes(&self.body, &mut text, &mut Vec::new(), false);
             text.encode_utf16().count()
+        }
+
+        /// Returns a UTF-16 range while preserving and clipping nested entities.
+        ///
+        /// Telegram expresses every entity offset in UTF-16 code units. Using
+        /// the same coordinate system here avoids corrupting astral Unicode
+        /// characters when a formatted fragment is extracted.
+        pub fn slice_utf16(&self, range: Range<usize>) -> Result<Self> {
+            if range.start > range.end {
+                return Err(Error::Utility(
+                    "formatted text slice start cannot exceed its end".to_owned(),
+                ));
+            }
+            let rendered = self.render();
+            let boundaries = utf16_boundaries(&rendered.text);
+            let total = boundaries.len().saturating_sub(1);
+            if range.end > total {
+                return Err(Error::Utility(format!(
+                    "formatted text slice {}..{} exceeds UTF-16 length {total}",
+                    range.start, range.end
+                )));
+            }
+            let text = text_range(&rendered.text, &boundaries, range.start, range.end)?;
+            let mut entities = Vec::new();
+            for mut entity in rendered.entities {
+                let entity_start = usize::try_from(entity.offset).map_err(|_| {
+                    Error::Utility("message entity offset cannot be negative".to_owned())
+                })?;
+                let entity_length = usize::try_from(entity.length).map_err(|_| {
+                    Error::Utility("message entity length cannot be negative".to_owned())
+                })?;
+                let entity_end = entity_start.checked_add(entity_length).ok_or_else(|| {
+                    Error::Utility("message entity UTF-16 range overflowed".to_owned())
+                })?;
+                let start = entity_start.max(range.start);
+                let end = entity_end.min(range.end);
+                if start < end {
+                    entity.offset = i64::try_from(start - range.start).map_err(|_| {
+                        Error::Utility("message entity offset exceeds i64".to_owned())
+                    })?;
+                    entity.length = i64::try_from(end - start).map_err(|_| {
+                        Error::Utility("message entity length exceeds i64".to_owned())
+                    })?;
+                    entities.push(entity);
+                }
+            }
+            Self::from_entities(&text, &entities)
         }
 
         pub fn render(&self) -> RenderedText {
@@ -3114,6 +3162,35 @@ mod tests {
                 .text,
             "one, two!"
         );
+    }
+
+    #[test]
+    fn formatted_text_slices_utf16_without_losing_nested_entities() {
+        let formatted = Text::plain("🙂 ")
+            .then(bold(Text::plain("World").then(italic("!"))))
+            .then(" tail");
+
+        let sliced = formatted.slice_utf16(3..7).unwrap().render();
+        assert_eq!(sliced.text, "Worl");
+        assert_eq!(sliced.entities.len(), 1);
+        assert_eq!(sliced.entities[0].kind, "bold");
+        assert_eq!(sliced.entities[0].offset, 0);
+        assert_eq!(sliced.entities[0].length, 4);
+
+        let nested = formatted.slice_utf16(7..9).unwrap().render();
+        assert_eq!(nested.text, "d!");
+        assert_eq!(
+            nested
+                .entities
+                .iter()
+                .map(|entity| (entity.kind.as_str(), entity.offset, entity.length))
+                .collect::<Vec<_>>(),
+            vec![("bold", 0, 2), ("italic", 1, 1)]
+        );
+
+        assert!(formatted.slice_utf16(1..2).is_err());
+        assert!(formatted.slice_utf16(12..11).is_err());
+        assert!(formatted.slice_utf16(0..100).is_err());
     }
 
     #[test]
