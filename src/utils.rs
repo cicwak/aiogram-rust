@@ -1846,6 +1846,32 @@ pub mod deep_linking {
         } else {
             payload.to_owned()
         };
+        create_deep_link_from_payload(username, link_type, payload, app_name)
+    }
+
+    /// Creates a deep link after applying a custom binary transform followed
+    /// by URL-safe Base64, matching aiogram's `encoder=` workflow.
+    pub fn create_deep_link_with_encoder(
+        username: &str,
+        link_type: DeepLinkType,
+        payload: &str,
+        app_name: Option<&str>,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_deep_link_from_payload(
+            username,
+            link_type,
+            crate::utils::payload::encode_payload_with(payload, encoder),
+            app_name,
+        )
+    }
+
+    fn create_deep_link_from_payload(
+        username: &str,
+        link_type: DeepLinkType,
+        payload: String,
+        app_name: Option<&str>,
+    ) -> Result<String> {
         if payload.len() > MAX_PAYLOAD_LENGTH {
             return Err(Error::Utility(format!(
                 "deep-link payload exceeds {MAX_PAYLOAD_LENGTH} characters"
@@ -1875,8 +1901,24 @@ pub mod deep_linking {
         create_deep_link(username, DeepLinkType::Start, payload, encode, None)
     }
 
+    pub fn create_start_link_with_encoder(
+        username: &str,
+        payload: &str,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_deep_link_with_encoder(username, DeepLinkType::Start, payload, None, encoder)
+    }
+
     pub fn create_startgroup_link(username: &str, payload: &str, encode: bool) -> Result<String> {
         create_deep_link(username, DeepLinkType::StartGroup, payload, encode, None)
+    }
+
+    pub fn create_startgroup_link_with_encoder(
+        username: &str,
+        payload: &str,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_deep_link_with_encoder(username, DeepLinkType::StartGroup, payload, None, encoder)
     }
 
     pub fn create_startapp_link(
@@ -1886,6 +1928,15 @@ pub mod deep_linking {
         app_name: Option<&str>,
     ) -> Result<String> {
         create_deep_link(username, DeepLinkType::StartApp, payload, encode, app_name)
+    }
+
+    pub fn create_startapp_link_with_encoder(
+        username: &str,
+        payload: &str,
+        app_name: Option<&str>,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_deep_link_with_encoder(username, DeepLinkType::StartApp, payload, app_name, encoder)
     }
 
     async fn username(bot: &crate::Bot) -> Result<String> {
@@ -1902,12 +1953,28 @@ pub mod deep_linking {
         create_start_link(&username(bot).await?, payload, encode)
     }
 
+    pub async fn create_start_link_for_bot_with_encoder(
+        bot: &crate::Bot,
+        payload: &str,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_start_link_with_encoder(&username(bot).await?, payload, encoder)
+    }
+
     pub async fn create_startgroup_link_for_bot(
         bot: &crate::Bot,
         payload: &str,
         encode: bool,
     ) -> Result<String> {
         create_startgroup_link(&username(bot).await?, payload, encode)
+    }
+
+    pub async fn create_startgroup_link_for_bot_with_encoder(
+        bot: &crate::Bot,
+        payload: &str,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_startgroup_link_with_encoder(&username(bot).await?, payload, encoder)
     }
 
     pub async fn create_startapp_link_for_bot(
@@ -1917,6 +1984,15 @@ pub mod deep_linking {
         app_name: Option<&str>,
     ) -> Result<String> {
         create_startapp_link(&username(bot).await?, payload, encode, app_name)
+    }
+
+    pub async fn create_startapp_link_for_bot_with_encoder(
+        bot: &crate::Bot,
+        payload: &str,
+        app_name: Option<&str>,
+        encoder: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) -> Result<String> {
+        create_startapp_link_with_encoder(&username(bot).await?, payload, app_name, encoder)
     }
 }
 
@@ -3291,7 +3367,9 @@ mod tests {
     use super::backoff::{Backoff, BackoffConfig};
     use super::callback_data::CallbackData;
     use super::chat_action::{ChatActionConfig, ChatActionMiddleware, ChatActionSender};
-    use super::deep_linking::{create_start_link, decode_payload};
+    use super::deep_linking::{
+        create_start_link, create_startapp_link_with_encoder, decode_payload,
+    };
     use super::formatting::{Text, bold, html_bold, italic, markdown_v2_bold, text_link};
     use super::keyboard::{InlineKeyboardBuilder, ReplyKeyboardBuilder};
     use super::link::{
@@ -3381,6 +3459,18 @@ mod tests {
         let link = create_start_link("@sample_bot", "hello world", true).unwrap();
         let payload = link.split('=').nth(1).unwrap();
         assert_eq!(decode_payload(payload).unwrap(), b"hello world");
+
+        let reverse = |value: &[u8]| value.iter().rev().copied().collect::<Vec<_>>();
+        let encoded = super::payload::encode_payload_with("secret", reverse);
+        assert_eq!(
+            create_startapp_link_with_encoder("sample_bot", "secret", Some("app"), reverse)
+                .unwrap(),
+            format!("https://t.me/sample_bot/app?startapp={encoded}")
+        );
+        assert!(
+            create_startapp_link_with_encoder("sample_bot", &"x".repeat(49), None, reverse)
+                .is_err()
+        );
         assert_eq!(
             super::deep_linking::create_startgroup_link("sample_bot", "group", false).unwrap(),
             "https://t.me/sample_bot?startgroup=group"
