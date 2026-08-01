@@ -216,6 +216,14 @@ def main() -> None:
         "mapped Python method annotation count",
     )
     require(
+        generated_count(
+            ROOT / "src" / "methods" / "generated.rs",
+            "MAPPED_PYTHON_METHOD_DEFAULT_COUNT",
+        ),
+        surface["mapped_python_method_defaults"],
+        "mapped Python method default count",
+    )
+    require(
         generated_count(ROOT / "src" / "types" / "bound.rs", "BOUND_METHOD_COUNT"),
         surface["aiogram_bound_aliases"],
         "generated bound alias count",

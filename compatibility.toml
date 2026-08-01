@@ -22,6 +22,7 @@ generated_python_type_modules = 430
 mapped_python_type_annotations = 1896
 schema_methods = 185
 mapped_python_method_annotations = 980
+mapped_python_method_defaults = 41
 upstream_test_modules = 289
 manual_python_modules = 95
 manual_python_public_classes = 168

@@ -222,16 +222,27 @@ fn read_python_fields(
     for object in objects {
         let path = root.join(format!("{}.py", object.name.to_snake_case()));
         let source = fs::read_to_string(&path)?;
+        let lines: Vec<_> = source.lines().collect();
         for field in &object.annotations {
             let rust_name = field_name(&field.name).0;
             let candidates = [field.name.as_str(), rust_name.as_str()];
             let parsed = candidates.iter().find_map(|name| {
                 let prefix = format!("    {name}: ");
-                source.lines().find_map(|line| {
+                lines.iter().enumerate().find_map(|(index, line)| {
                     let value = line.strip_prefix(&prefix)?;
                     let (annotation, default) = match value.split_once(" = ") {
                         Some((annotation, default)) => {
-                            (annotation.trim(), Some(default.trim().to_owned()))
+                            let mut default = default.trim().to_owned();
+                            let mut balance = delimiter_balance(&default);
+                            for continuation in &lines[index + 1..] {
+                                if balance <= 0 {
+                                    break;
+                                }
+                                default.push(' ');
+                                default.push_str(continuation.trim());
+                                balance += delimiter_balance(continuation);
+                            }
+                            (annotation.trim(), Some(default))
                         }
                         None => (value.trim(), None),
                     };
@@ -247,6 +258,23 @@ fn read_python_fields(
         }
     }
     Ok(fields)
+}
+
+fn delimiter_balance(value: &str) -> i64 {
+    value
+        .chars()
+        .map(|character| match character {
+            '(' | '[' | '{' => 1,
+            ')' | ']' | '}' => -1,
+            _ => 0,
+        })
+        .sum()
+}
+
+fn default_reference(field: &PythonField) -> Option<&str> {
+    let default = field.default.as_deref()?;
+    let (_, value) = default.split_once("Default(\"")?;
+    value.split_once('"').map(|(name, _)| name)
 }
 
 fn read_enums(root: &Path) -> Result<Vec<EnumDef>, Box<dyn std::error::Error>> {
@@ -711,6 +739,13 @@ fn generate_methods(
         "/// Number of final Python field annotations mapped into generated Rust methods.\npub const MAPPED_PYTHON_METHOD_ANNOTATION_COUNT: usize = {};\n\n",
         python_fields.len()
     ));
+    output.push_str(&format!(
+        "/// Number of aiogram `Default(...)` field mappings preserved in Rust.\npub const MAPPED_PYTHON_METHOD_DEFAULT_COUNT: usize = {};\n\n",
+        python_fields
+            .values()
+            .filter(|field| default_reference(field).is_some())
+            .count()
+    ));
 
     for object in objects {
         if CORE_METHODS.contains(&object.name.as_str()) {
@@ -748,10 +783,19 @@ fn generate_methods(
             .join(format!("{}.py", object.name.to_snake_case()));
         let returning = extract_return_type(&python_path)?;
         let returning = python_return_type(&returning, type_names);
+        let defaults: Vec<_> = object
+            .annotations
+            .iter()
+            .filter_map(|field| {
+                let python = python_fields.get(&(object.name.clone(), field.name.clone()))?;
+                Some((field.name.as_str(), default_reference(python)?))
+            })
+            .collect();
         output.push_str(&format!(
-            "impl TelegramMethod for {rust_name} {{\n    type Response = {returning};\n    const NAME: &'static str = {:?};\n    const FIELDS: &'static [&'static str] = &{:?};\n}}\n\n",
+            "impl TelegramMethod for {rust_name} {{\n    type Response = {returning};\n    const NAME: &'static str = {:?};\n    const FIELDS: &'static [&'static str] = &{:?};\n    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &{:?};\n}}\n\n",
             object.name,
-            object.annotations.iter().map(|field| field.name.as_str()).collect::<Vec<_>>()
+            object.annotations.iter().map(|field| field.name.as_str()).collect::<Vec<_>>(),
+            defaults,
         ));
     }
     Ok(output)

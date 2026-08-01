@@ -141,6 +141,7 @@ pub trait TelegramMethod: Serialize + CollectFiles + Send + Sync {
     type Response: DeserializeOwned + Send + 'static;
     const NAME: &'static str;
     const FIELDS: &'static [&'static str];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 
     #[doc(hidden)]
     fn files(&self) -> Vec<InputFileUpload> {

@@ -41,7 +41,7 @@ The ignored `aiogram/` checkout is an upstream reference, not part of the Rust c
 
 ## Architecture and parity
 
-- `Bot` exposes all 185 Bot API calls as async methods; typed `TelegramMethod` payloads remain available when optional fields need builder-style configuration.
+- `Bot` exposes all 185 Bot API calls as async methods; typed `TelegramMethod` payloads remain available when optional fields need builder-style configuration, and all 41 upstream default-property aliases are generated rather than guessed from wire names.
 - All 390 upstream object definitions, 35 helper unions, 38 enums, 185 Bot API methods, and 187 bound object shortcuts are generated from the pinned aiogram source; `Message::send_copy` selects and executes all 15 aiogram-supported copy variants.
 - `Router` and `Dispatcher` provide all named update observers, observer-scoped filters/middleware, typed injection and flags, class handlers, recursive lifecycle, multi-bot polling with programmatic shutdown, and webhooks.
 - `filters` contains command, magic-field, text, callback-data, chat-member transition, state, dependency, error, and custom closure filters.

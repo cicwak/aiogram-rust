@@ -21,6 +21,9 @@ pub const API_METHOD_COUNT: usize = 185;
 /// Number of final Python field annotations mapped into generated Rust methods.
 pub const MAPPED_PYTHON_METHOD_ANNOTATION_COUNT: usize = 980;
 
+/// Number of aiogram `Default(...)` field mappings preserved in Rust.
+pub const MAPPED_PYTHON_METHOD_DEFAULT_COUNT: usize = 41;
+
 #[doc = "Use this method to add a new sticker to a set created by the bot. Emoji sticker sets can have up to 200 stickers. Other sticker sets can have up to 120 stickers. Returns True on success."]
 #[derive(Debug, Clone, Serialize)]
 pub struct AddStickerToSet {
@@ -57,6 +60,7 @@ impl TelegramMethod for AddStickerToSet {
     type Response = bool;
     const NAME: &'static str = "addStickerToSet";
     const FIELDS: &'static [&'static str] = &["user_id", "name", "sticker"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send answers to callback queries sent from inline keyboards. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert. On success, True is returned."]
@@ -133,6 +137,7 @@ impl TelegramMethod for AnswerCallbackQuery {
         "url",
         "cache_time",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to process a received chat join request query. Returns True on success."]
@@ -167,6 +172,7 @@ impl TelegramMethod for AnswerChatJoinRequestQuery {
     type Response = bool;
     const NAME: &'static str = "answerChatJoinRequestQuery";
     const FIELDS: &'static [&'static str] = &["chat_join_request_query_id", "result"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to reply to a received guest message. On success, a SentGuestMessage object is returned."]
@@ -204,6 +210,7 @@ impl TelegramMethod for AnswerGuestQuery {
     type Response = crate::types::SentGuestMessage;
     const NAME: &'static str = "answerGuestQuery";
     const FIELDS: &'static [&'static str] = &["guest_query_id", "result"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send answers to an inline query. On success, True is returned."]
@@ -310,6 +317,7 @@ impl TelegramMethod for AnswerInlineQuery {
         "switch_pm_parameter",
         "switch_pm_text",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Once the user has confirmed their payment and shipping details, the Bot API sends the final confirmation in the form of an Update with the field pre_checkout_query. Use this method to respond to such pre-checkout queries. On success, True is returned. Note: The Bot API must receive an answer within 10 seconds after the pre-checkout query was sent."]
@@ -354,6 +362,7 @@ impl TelegramMethod for AnswerPreCheckoutQuery {
     type Response = bool;
     const NAME: &'static str = "answerPreCheckoutQuery";
     const FIELDS: &'static [&'static str] = &["pre_checkout_query_id", "ok", "error_message"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "If you sent an invoice requesting a shipping address and the parameter is_flexible was specified, the Bot API will send an Update with a shipping_query field to the bot. Use this method to reply to shipping queries. On success, True is returned."]
@@ -413,6 +422,7 @@ impl TelegramMethod for AnswerShippingQuery {
         "shipping_options",
         "error_message",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned."]
@@ -450,6 +460,7 @@ impl TelegramMethod for AnswerWebAppQuery {
     type Response = crate::types::SentWebAppMessage;
     const NAME: &'static str = "answerWebAppQuery";
     const FIELDS: &'static [&'static str] = &["web_app_query_id", "result"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to approve a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success."]
@@ -484,6 +495,7 @@ impl TelegramMethod for ApproveChatJoinRequest {
     type Response = bool;
     const NAME: &'static str = "approveChatJoinRequest";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to approve a suggested post in a direct messages chat. The bot must have the 'can_post_messages' administrator right in the corresponding channel chat. Returns True on success."]
@@ -528,6 +540,7 @@ impl TelegramMethod for ApproveSuggestedPost {
     type Response = bool;
     const NAME: &'static str = "approveSuggestedPost";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_id", "send_date"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to ban a user in a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -583,6 +596,7 @@ impl TelegramMethod for BanChatMember {
     const NAME: &'static str = "banChatMember";
     const FIELDS: &'static [&'static str] =
         &["chat_id", "user_id", "until_date", "revoke_messages"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned, the owner of the banned chat won't be able to send messages on behalf of any of their channels. The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -617,6 +631,7 @@ impl TelegramMethod for BanChatSenderChat {
     type Response = bool;
     const NAME: &'static str = "banChatSenderChat";
     const FIELDS: &'static [&'static str] = &["chat_id", "sender_chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to close the bot instance before moving it from one local server to another. You need to delete the webhook before calling this method to ensure that the bot isn't launched again after server restart. The method will return error 429 in the first 10 minutes after the bot is launched. Returns True on success. Requires no parameters."]
@@ -648,6 +663,7 @@ impl TelegramMethod for Close {
     type Response = bool;
     const NAME: &'static str = "close";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to close an open topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success."]
@@ -682,6 +698,7 @@ impl TelegramMethod for CloseForumTopic {
     type Response = bool;
     const NAME: &'static str = "closeForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_thread_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to close an open 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success."]
@@ -712,6 +729,7 @@ impl TelegramMethod for CloseGeneralForumTopic {
     type Response = bool;
     const NAME: &'static str = "closeGeneralForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Converts a given regular gift to Telegram Stars. Requires the can_convert_gifts_to_stars business bot right. Returns True on success."]
@@ -749,6 +767,7 @@ impl TelegramMethod for ConvertGiftToStars {
     type Response = bool;
     const NAME: &'static str = "convertGiftToStars";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "owned_gift_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to copy messages of any kind. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message. Returns the MessageId of the sent message on success."]
@@ -974,6 +993,11 @@ impl TelegramMethod for CopyMessage {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("show_caption_above_media", "show_caption_above_media"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Use this method to copy messages of any kind. If some of the specified messages can't be found or copied, they are skipped. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessages, but the copied messages don't have a link to the original message. Album grouping is kept for copied messages. On success, an Array of MessageId of the sent messages is returned."]
@@ -1075,6 +1099,7 @@ impl TelegramMethod for CopyMessages {
         "protect_content",
         "remove_caption",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to create an additional invite link for a chat. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. The link can be revoked using the method revokeChatInviteLink. Returns the new invite link as ChatInviteLink object."]
@@ -1151,6 +1176,7 @@ impl TelegramMethod for CreateChatInviteLink {
         "member_limit",
         "creates_join_request",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to create a subscription invite link for a channel chat. The bot must have the can_invite_users administrator rights. The link can be edited using the method editChatSubscriptionInviteLink or revoked using the method revokeChatInviteLink. Returns the new invite link as a ChatInviteLink object."]
@@ -1208,6 +1234,7 @@ impl TelegramMethod for CreateChatSubscriptionInviteLink {
         "subscription_price",
         "name",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to create a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator right. Returns information about the created topic as a ForumTopic object."]
@@ -1263,6 +1290,7 @@ impl TelegramMethod for CreateForumTopic {
     const NAME: &'static str = "createForumTopic";
     const FIELDS: &'static [&'static str] =
         &["chat_id", "name", "icon_color", "icon_custom_emoji_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to create a link for an invoice. Returns the created invoice link as String on success."]
@@ -1508,6 +1536,7 @@ impl TelegramMethod for CreateInvoiceLink {
         "send_email_to_provider",
         "is_flexible",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to create a new sticker set owned by a user. The bot will be able to edit the sticker set thus created. Returns True on success."]
@@ -1593,6 +1622,7 @@ impl TelegramMethod for CreateNewStickerSet {
         "needs_repainting",
         "sticker_format",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to decline a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success."]
@@ -1627,6 +1657,7 @@ impl TelegramMethod for DeclineChatJoinRequest {
     type Response = bool;
     const NAME: &'static str = "declineChatJoinRequest";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to decline a suggested post in a direct messages chat. The bot must have the 'can_manage_direct_messages' administrator right in the corresponding channel chat. Returns True on success."]
@@ -1671,6 +1702,7 @@ impl TelegramMethod for DeclineSuggestedPost {
     type Response = bool;
     const NAME: &'static str = "declineSuggestedPost";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_id", "comment"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to remove up to 10000 recent reactions in a group or a supergroup chat added by a given user or chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success."]
@@ -1721,6 +1753,7 @@ impl TelegramMethod for DeleteAllMessageReactions {
     type Response = bool;
     const NAME: &'static str = "deleteAllMessageReactions";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id", "actor_chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Delete messages on behalf of a business account. Requires the can_delete_sent_messages business bot right to delete messages sent by the bot itself, or the can_delete_all_messages business bot right to delete any message. Returns True on success."]
@@ -1755,6 +1788,7 @@ impl TelegramMethod for DeleteBusinessMessages {
     type Response = bool;
     const NAME: &'static str = "deleteBusinessMessages";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "message_ids"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a chat photo. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -1785,6 +1819,7 @@ impl TelegramMethod for DeleteChatPhoto {
     type Response = bool;
     const NAME: &'static str = "deleteChatPhoto";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a group sticker set from a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success."]
@@ -1815,6 +1850,7 @@ impl TelegramMethod for DeleteChatStickerSet {
     type Response = bool;
     const NAME: &'static str = "deleteChatStickerSet";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete an ephemeral message. Note that it is not guaranteed that the user will receive the message deletion event, especially if they are offline. Returns True on success."]
@@ -1858,6 +1894,7 @@ impl TelegramMethod for DeleteEphemeralMessage {
     const NAME: &'static str = "deleteEphemeralMessage";
     const FIELDS: &'static [&'static str] =
         &["chat_id", "receiver_user_id", "ephemeral_message_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a forum topic along with all its messages in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights. Returns True on success."]
@@ -1892,6 +1929,7 @@ impl TelegramMethod for DeleteForumTopic {
     type Response = bool;
     const NAME: &'static str = "deleteForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_thread_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a message, including service messages, with the following limitations:"]
@@ -1926,6 +1964,7 @@ impl TelegramMethod for DeleteMessage {
     type Response = bool;
     const NAME: &'static str = "deleteMessage";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to remove a reaction from a message in a group or a supergroup chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success."]
@@ -1980,6 +2019,7 @@ impl TelegramMethod for DeleteMessageReaction {
     type Response = bool;
     const NAME: &'static str = "deleteMessageReaction";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_id", "user_id", "actor_chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete multiple messages simultaneously. If some of the specified messages can't be found, they are skipped. Returns True on success."]
@@ -2014,6 +2054,7 @@ impl TelegramMethod for DeleteMessages {
     type Response = bool;
     const NAME: &'static str = "deleteMessages";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_ids"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete the list of the bot's commands for the given scope and user language. After deletion, higher level commands will be shown to affected users. Returns True on success."]
@@ -2066,6 +2107,7 @@ impl TelegramMethod for DeleteMyCommands {
     type Response = bool;
     const NAME: &'static str = "deleteMyCommands";
     const FIELDS: &'static [&'static str] = &["scope", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a sticker from a set created by the bot. Returns True on success."]
@@ -2096,6 +2138,7 @@ impl TelegramMethod for DeleteStickerFromSet {
     type Response = bool;
     const NAME: &'static str = "deleteStickerFromSet";
     const FIELDS: &'static [&'static str] = &["sticker"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to delete a sticker set that was created by the bot. Returns True on success."]
@@ -2126,6 +2169,7 @@ impl TelegramMethod for DeleteStickerSet {
     type Response = bool;
     const NAME: &'static str = "deleteStickerSet";
     const FIELDS: &'static [&'static str] = &["name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Deletes a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns True on success."]
@@ -2160,6 +2204,7 @@ impl TelegramMethod for DeleteStory {
     type Response = bool;
     const NAME: &'static str = "deleteStory";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "story_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success."]
@@ -2202,6 +2247,7 @@ impl TelegramMethod for DeleteWebhook {
     type Response = bool;
     const NAME: &'static str = "deleteWebhook";
     const FIELDS: &'static [&'static str] = &["drop_pending_updates"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit a non-primary invite link created by the bot. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the edited invite link as a ChatInviteLink object."]
@@ -2283,6 +2329,7 @@ impl TelegramMethod for EditChatInviteLink {
         "member_limit",
         "creates_join_request",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit a subscription invite link created by the bot. The bot must have the can_invite_users administrator rights. Returns the edited invite link as a ChatInviteLink object."]
@@ -2327,6 +2374,7 @@ impl TelegramMethod for EditChatSubscriptionInviteLink {
     type Response = crate::types::ChatInviteLink;
     const NAME: &'static str = "editChatSubscriptionInviteLink";
     const FIELDS: &'static [&'static str] = &["chat_id", "invite_link", "name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit the caption of an ephemeral message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned."]
@@ -2417,6 +2465,7 @@ impl TelegramMethod for EditEphemeralMessageCaption {
         "caption_entities",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit the media of an ephemeral message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned."]
@@ -2480,6 +2529,7 @@ impl TelegramMethod for EditEphemeralMessageMedia {
         "media",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit only the reply markup of an ephemeral message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned."]
@@ -2537,6 +2587,7 @@ impl TelegramMethod for EditEphemeralMessageReplyMarkup {
         "ephemeral_message_id",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit an ephemeral text message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned."]
@@ -2633,6 +2684,7 @@ impl TelegramMethod for EditEphemeralMessageText {
         "link_preview_options",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit name and icon of a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success."]
@@ -2692,6 +2744,7 @@ impl TelegramMethod for EditForumTopic {
         "name",
         "icon_custom_emoji_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit the name of the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success."]
@@ -2726,6 +2779,7 @@ impl TelegramMethod for EditGeneralForumTopic {
     type Response = bool;
     const NAME: &'static str = "editGeneralForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id", "name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit captions of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent."]
@@ -2858,6 +2912,10 @@ impl TelegramMethod for EditMessageCaption {
         "show_caption_above_media",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("show_caption_above_media", "show_caption_above_media"),
+    ];
 }
 
 #[doc = "Use this method to edit a checklist on behalf of a connected business account. On success, the edited Message is returned."]
@@ -2921,6 +2979,7 @@ impl TelegramMethod for EditMessageChecklist {
         "checklist",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit live location messages. A location can be edited until its live_period expires or editing is explicitly disabled by a call to stopMessageLiveLocation. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned."]
@@ -3057,6 +3116,7 @@ impl TelegramMethod for EditMessageLiveLocation {
         "proximity_alert_radius",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit animation, audio, document, live photo, photo, or video messages, or to replace a text or a rich message with a media. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo, a live photo, or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent."]
@@ -3144,6 +3204,7 @@ impl TelegramMethod for EditMessageMedia {
         "inline_message_id",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit only the reply markup of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent."]
@@ -3232,6 +3293,7 @@ impl TelegramMethod for EditMessageReplyMarkup {
         "inline_message_id",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to edit text, rich and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent."]
@@ -3386,6 +3448,11 @@ impl TelegramMethod for EditMessageText {
         "rich_message",
         "disable_web_page_preview",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("link_preview_options", "link_preview"),
+        ("disable_web_page_preview", "link_preview_is_disabled"),
+    ];
 }
 
 #[doc = "Edits a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success."]
@@ -3476,6 +3543,7 @@ impl TelegramMethod for EditStory {
         "caption_entities",
         "areas",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Allows the bot to cancel or re-enable extension of a subscription paid in Telegram Stars. Returns True on success."]
@@ -3519,6 +3587,7 @@ impl TelegramMethod for EditUserStarSubscription {
     const NAME: &'static str = "editUserStarSubscription";
     const FIELDS: &'static [&'static str] =
         &["user_id", "telegram_payment_charge_id", "is_canceled"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to generate a new primary invite link for a chat; any previously generated primary link is revoked. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the new invite link as String on success."]
@@ -3549,6 +3618,7 @@ impl TelegramMethod for ExportChatInviteLink {
     type Response = String;
     const NAME: &'static str = "exportChatInviteLink";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to forward messages of any kind. Service messages and messages with protected content can't be forwarded. On success, the sent Message is returned."]
@@ -3675,6 +3745,8 @@ impl TelegramMethod for ForwardMessage {
         "message_effect_id",
         "suggested_post_parameters",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to forward multiple messages of any kind. If some of the specified messages can't be found or forwarded, they are skipped. Service messages and messages with protected content can't be forwarded. Album grouping is kept for forwarded messages. On success, an Array of MessageId of the sent messages is returned."]
@@ -3765,6 +3837,7 @@ impl TelegramMethod for ForwardMessages {
         "disable_notification",
         "protect_content",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the list of gifts that can be sent by the bot to users and channel chats. Requires no parameters. Returns a Gifts object."]
@@ -3796,6 +3869,7 @@ impl TelegramMethod for GetAvailableGifts {
     type Response = crate::types::Gifts;
     const NAME: &'static str = "getAvailableGifts";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the gifts received and owned by a managed business account. Requires the can_view_gifts_and_stars business bot right. Returns OwnedGifts on success."]
@@ -3949,6 +4023,7 @@ impl TelegramMethod for GetBusinessAccountGifts {
         "limit",
         "exclude_limited",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the amount of Telegram Stars owned by a managed business account. Requires the can_view_gifts_and_stars business bot right. Returns StarAmount on success."]
@@ -3979,6 +4054,7 @@ impl TelegramMethod for GetBusinessAccountStarBalance {
     type Response = crate::types::StarAmount;
     const NAME: &'static str = "getBusinessAccountStarBalance";
     const FIELDS: &'static [&'static str] = &["business_connection_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get information about the connection of the bot with a business account. Returns a BusinessConnection object on success."]
@@ -4009,6 +4085,7 @@ impl TelegramMethod for GetBusinessConnection {
     type Response = crate::types::BusinessConnection;
     const NAME: &'static str = "getBusinessConnection";
     const FIELDS: &'static [&'static str] = &["business_connection_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get up-to-date information about the chat. Returns a ChatFullInfo object on success."]
@@ -4039,6 +4116,7 @@ impl TelegramMethod for GetChat {
     type Response = crate::types::ChatFullInfo;
     const NAME: &'static str = "getChat";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get a list of administrators in a chat. Returns an Array of ChatMember objects."]
@@ -4079,6 +4157,7 @@ impl TelegramMethod for GetChatAdministrators {
     type Response = Vec<crate::types::ResultChatMemberUnion>;
     const NAME: &'static str = "getChatAdministrators";
     const FIELDS: &'static [&'static str] = &["chat_id", "return_bots"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the gifts owned by a chat. Returns OwnedGifts on success."]
@@ -4221,6 +4300,7 @@ impl TelegramMethod for GetChatGifts {
         "offset",
         "limit",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get information about a member of a chat. The method is only guaranteed to work for other users if the bot is an administrator in the chat. Returns a ChatMember object on success."]
@@ -4255,6 +4335,7 @@ impl TelegramMethod for GetChatMember {
     type Response = crate::types::ResultChatMemberUnion;
     const NAME: &'static str = "getChatMember";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the number of members in a chat. Returns Integer on success."]
@@ -4285,6 +4366,7 @@ impl TelegramMethod for GetChatMemberCount {
     type Response = i64;
     const NAME: &'static str = "getChatMemberCount";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current value of the bot's menu button in a private chat, or the default menu button. Returns MenuButton on success."]
@@ -4327,6 +4409,7 @@ impl TelegramMethod for GetChatMenuButton {
     type Response = crate::types::ResultMenuButtonUnion;
     const NAME: &'static str = "getChatMenuButton";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get information about custom emoji stickers by their identifiers. Returns an Array of Sticker objects."]
@@ -4357,6 +4440,7 @@ impl TelegramMethod for GetCustomEmojiStickers {
     type Response = Vec<crate::types::Sticker>;
     const NAME: &'static str = "getCustomEmojiStickers";
     const FIELDS: &'static [&'static str] = &["custom_emoji_ids"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get basic information about a file and prepare it for downloading. For the moment, bots can download files of up to 20MB in size. On success, a File object is returned. The file can then be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>, where <file_path> is taken from the response. It is guaranteed that the link will be valid for at least 1 hour. When the link expires, a new one can be requested by calling getFile again."]
@@ -4387,6 +4471,7 @@ impl TelegramMethod for GetFile {
     type Response = crate::types::File;
     const NAME: &'static str = "getFile";
     const FIELDS: &'static [&'static str] = &["file_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get custom emoji stickers, which can be used as a forum topic icon by any user. Requires no parameters. Returns an Array of Sticker objects."]
@@ -4418,6 +4503,7 @@ impl TelegramMethod for GetForumTopicIconStickers {
     type Response = Vec<crate::types::Sticker>;
     const NAME: &'static str = "getForumTopicIconStickers";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get data for high score tables. Will return the score of the specified user and several of their neighbors in a game. Returns an Array of GameHighScore objects."]
@@ -4479,6 +4565,7 @@ impl TelegramMethod for GetGameHighScores {
     const NAME: &'static str = "getGameHighScores";
     const FIELDS: &'static [&'static str] =
         &["user_id", "chat_id", "message_id", "inline_message_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the access settings of a managed bot. Returns a BotAccessSettings object on success."]
@@ -4509,6 +4596,7 @@ impl TelegramMethod for GetManagedBotAccessSettings {
     type Response = crate::types::BotAccessSettings;
     const NAME: &'static str = "getManagedBotAccessSettings";
     const FIELDS: &'static [&'static str] = &["user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the token of a managed bot. Returns the token as String on success."]
@@ -4539,6 +4627,7 @@ impl TelegramMethod for GetManagedBotToken {
     type Response = String;
     const NAME: &'static str = "getManagedBotToken";
     const FIELDS: &'static [&'static str] = &["user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "A simple method for testing your bot's authentication token. Requires no parameters. Returns basic information about the bot in form of a User object."]
@@ -4570,6 +4659,7 @@ impl TelegramMethod for GetMe {
     type Response = crate::types::User;
     const NAME: &'static str = "getMe";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current list of the bot's commands for the given scope and user language. Returns an Array of BotCommand objects. If commands aren't set, an empty list is returned."]
@@ -4622,6 +4712,7 @@ impl TelegramMethod for GetMyCommands {
     type Response = Vec<crate::types::BotCommand>;
     const NAME: &'static str = "getMyCommands";
     const FIELDS: &'static [&'static str] = &["scope", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current default administrator rights of the bot. Returns ChatAdministratorRights on success."]
@@ -4664,6 +4755,7 @@ impl TelegramMethod for GetMyDefaultAdministratorRights {
     type Response = crate::types::ChatAdministratorRights;
     const NAME: &'static str = "getMyDefaultAdministratorRights";
     const FIELDS: &'static [&'static str] = &["for_channels"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current bot description for the given user language. Returns BotDescription on success."]
@@ -4706,6 +4798,7 @@ impl TelegramMethod for GetMyDescription {
     type Response = crate::types::BotDescription;
     const NAME: &'static str = "getMyDescription";
     const FIELDS: &'static [&'static str] = &["language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current bot name for the given user language. Returns BotName on success."]
@@ -4748,6 +4841,7 @@ impl TelegramMethod for GetMyName {
     type Response = crate::types::BotName;
     const NAME: &'static str = "getMyName";
     const FIELDS: &'static [&'static str] = &["language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the current bot short description for the given user language. Returns BotShortDescription on success."]
@@ -4790,6 +4884,7 @@ impl TelegramMethod for GetMyShortDescription {
     type Response = crate::types::BotShortDescription;
     const NAME: &'static str = "getMyShortDescription";
     const FIELDS: &'static [&'static str] = &["language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "A method to get the current Telegram Stars balance of the bot. Requires no parameters. On success, returns a StarAmount object."]
@@ -4821,6 +4916,7 @@ impl TelegramMethod for GetMyStarBalance {
     type Response = crate::types::StarAmount;
     const NAME: &'static str = "getMyStarBalance";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the bot's Telegram Star transactions in chronological order. On success, returns a StarTransactions object."]
@@ -4873,6 +4969,7 @@ impl TelegramMethod for GetStarTransactions {
     type Response = crate::types::StarTransactions;
     const NAME: &'static str = "getStarTransactions";
     const FIELDS: &'static [&'static str] = &["offset", "limit"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get a sticker set. On success, a StickerSet object is returned."]
@@ -4903,6 +5000,7 @@ impl TelegramMethod for GetStickerSet {
     type Response = crate::types::StickerSet;
     const NAME: &'static str = "getStickerSet";
     const FIELDS: &'static [&'static str] = &["name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to receive incoming updates using long polling (wiki). Returns an Array of Update objects."]
@@ -4975,6 +5073,7 @@ impl TelegramMethod for GetUpdates {
     type Response = Vec<crate::types::Update>;
     const NAME: &'static str = "getUpdates";
     const FIELDS: &'static [&'static str] = &["offset", "limit", "timeout", "allowed_updates"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the list of boosts added to a chat by a user. Requires administrator rights in the chat. Returns a UserChatBoosts object."]
@@ -5009,6 +5108,7 @@ impl TelegramMethod for GetUserChatBoosts {
     type Response = crate::types::UserChatBoosts;
     const NAME: &'static str = "getUserChatBoosts";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Returns the gifts owned and hosted by a user. Returns OwnedGifts on success."]
@@ -5129,6 +5229,7 @@ impl TelegramMethod for GetUserGifts {
         "offset",
         "limit",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get the last messages from the personal chat (i.e., the chat currently added to their profile) of a given user. On success, an Array of Message objects is returned."]
@@ -5163,6 +5264,7 @@ impl TelegramMethod for GetUserPersonalChatMessages {
     type Response = Vec<crate::types::Message>;
     const NAME: &'static str = "getUserPersonalChatMessages";
     const FIELDS: &'static [&'static str] = &["user_id", "limit"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get a list of profile audios for a user. Returns a UserProfileAudios object."]
@@ -5213,6 +5315,7 @@ impl TelegramMethod for GetUserProfileAudios {
     type Response = crate::types::UserProfileAudios;
     const NAME: &'static str = "getUserProfileAudios";
     const FIELDS: &'static [&'static str] = &["user_id", "offset", "limit"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object."]
@@ -5263,6 +5366,7 @@ impl TelegramMethod for GetUserProfilePhotos {
     type Response = crate::types::UserProfilePhotos;
     const NAME: &'static str = "getUserProfilePhotos";
     const FIELDS: &'static [&'static str] = &["user_id", "offset", "limit"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to get current webhook status. Requires no parameters. On success, returns a WebhookInfo object. If the bot is using getUpdates, will return an object with the url field empty."]
@@ -5294,6 +5398,7 @@ impl TelegramMethod for GetWebhookInfo {
     type Response = crate::types::WebhookInfo;
     const NAME: &'static str = "getWebhookInfo";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Gifts a Telegram Premium subscription to the given user. Returns True on success."]
@@ -5369,6 +5474,7 @@ impl TelegramMethod for GiftPremiumSubscription {
         "text_parse_mode",
         "text_entities",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to hide the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. The topic will be automatically closed if it was open. Returns True on success."]
@@ -5399,6 +5505,7 @@ impl TelegramMethod for HideGeneralForumTopic {
     type Response = bool;
     const NAME: &'static str = "hideGeneralForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method for your bot to leave a group, supergroup or channel. Returns True on success."]
@@ -5429,6 +5536,7 @@ impl TelegramMethod for LeaveChat {
     type Response = bool;
     const NAME: &'static str = "leaveChat";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to log out from the cloud Bot API server before launching the bot locally. You must log out the bot before running it locally, otherwise there is no guarantee that the bot will receive updates. After a successful call, you can immediately log in on a local server, but will not be able to log in back to the cloud Bot API server for 10 minutes. Returns True on success. Requires no parameters."]
@@ -5460,6 +5568,7 @@ impl TelegramMethod for LogOut {
     type Response = bool;
     const NAME: &'static str = "logOut";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to add a message to the list of pinned messages in a chat. In private chats and channel direct messages chats, all non-service messages can be pinned. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to pin messages in groups and channels respectively. Returns True on success."]
@@ -5519,6 +5628,7 @@ impl TelegramMethod for PinChatMessage {
         "business_connection_id",
         "disable_notification",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Posts a story on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success."]
@@ -5631,6 +5741,7 @@ impl TelegramMethod for PostStory {
         "post_to_chat_page",
         "protect_content",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Pass False for all boolean parameters to demote a user. Returns True on success."]
@@ -5855,6 +5966,7 @@ impl TelegramMethod for PromoteChatMember {
         "can_manage_direct_messages",
         "can_manage_tags",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Marks incoming message as read on behalf of a business account. Requires the can_read_messages business bot right. Returns True on success."]
@@ -5893,6 +6005,7 @@ impl TelegramMethod for ReadBusinessMessage {
     type Response = bool;
     const NAME: &'static str = "readBusinessMessage";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "chat_id", "message_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Refunds a successful payment in Telegram Stars. Returns True on success."]
@@ -5927,6 +6040,7 @@ impl TelegramMethod for RefundStarPayment {
     type Response = bool;
     const NAME: &'static str = "refundStarPayment";
     const FIELDS: &'static [&'static str] = &["user_id", "telegram_payment_charge_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Removes the current profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success."]
@@ -5967,6 +6081,7 @@ impl TelegramMethod for RemoveBusinessAccountProfilePhoto {
     type Response = bool;
     const NAME: &'static str = "removeBusinessAccountProfilePhoto";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "is_public"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Removes verification from a chat that is currently verified on behalf of the organization represented by the bot. Returns True on success."]
@@ -5997,6 +6112,7 @@ impl TelegramMethod for RemoveChatVerification {
     type Response = bool;
     const NAME: &'static str = "removeChatVerification";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Removes the profile photo of the bot. Requires no parameters. Returns True on success."]
@@ -6028,6 +6144,7 @@ impl TelegramMethod for RemoveMyProfilePhoto {
     type Response = bool;
     const NAME: &'static str = "removeMyProfilePhoto";
     const FIELDS: &'static [&'static str] = &[];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Removes verification from a user who is currently verified on behalf of the organization represented by the bot. Returns True on success."]
@@ -6058,6 +6175,7 @@ impl TelegramMethod for RemoveUserVerification {
     type Response = bool;
     const NAME: &'static str = "removeUserVerification";
     const FIELDS: &'static [&'static str] = &["user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to reopen a closed topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success."]
@@ -6092,6 +6210,7 @@ impl TelegramMethod for ReopenForumTopic {
     type Response = bool;
     const NAME: &'static str = "reopenForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_thread_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to reopen a closed 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. The topic will be automatically unhidden if it was hidden. Returns True on success."]
@@ -6122,6 +6241,7 @@ impl TelegramMethod for ReopenGeneralForumTopic {
     type Response = bool;
     const NAME: &'static str = "reopenGeneralForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to revoke the current token of a managed bot and generate a new one. Returns the new token as String on success."]
@@ -6152,6 +6272,7 @@ impl TelegramMethod for ReplaceManagedBotToken {
     type Response = String;
     const NAME: &'static str = "replaceManagedBotToken";
     const FIELDS: &'static [&'static str] = &["user_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to replace an existing sticker in a sticker set with a new one. The method is equivalent to calling deleteStickerFromSet, then addStickerToSet, then setStickerPositionInSet. Returns True on success."]
@@ -6199,6 +6320,7 @@ impl TelegramMethod for ReplaceStickerInSet {
     type Response = bool;
     const NAME: &'static str = "replaceStickerInSet";
     const FIELDS: &'static [&'static str] = &["user_id", "name", "old_sticker", "sticker"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Reposts a story on behalf of a business account from another business account. Both business accounts must be managed by the same bot, and the story on the source account must have been posted (or reposted) by the bot. Requires the can_manage_stories business bot right for both business accounts. Returns Story on success."]
@@ -6273,6 +6395,7 @@ impl TelegramMethod for RepostStory {
         "post_to_chat_page",
         "protect_content",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to restrict a user in a supergroup. The bot must be an administrator in the supergroup for this to work and must have the appropriate administrator rights. Pass True for all permissions to lift restrictions from a user. Returns True on success."]
@@ -6341,6 +6464,7 @@ impl TelegramMethod for RestrictChatMember {
         "use_independent_chat_permissions",
         "until_date",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to revoke an invite link created by the bot. If the primary link is revoked, a new link is automatically generated. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the revoked invite link as ChatInviteLink object."]
@@ -6375,6 +6499,7 @@ impl TelegramMethod for RevokeChatInviteLink {
     type Response = crate::types::ChatInviteLink;
     const NAME: &'static str = "revokeChatInviteLink";
     const FIELDS: &'static [&'static str] = &["chat_id", "invite_link"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object."]
@@ -6456,6 +6581,7 @@ impl TelegramMethod for SavePreparedInlineMessage {
         "allow_group_chats",
         "allow_channel_chats",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Stores a keyboard button that can be used by a user within a Mini App. Returns a PreparedKeyboardButton object."]
@@ -6490,6 +6616,7 @@ impl TelegramMethod for SavePreparedKeyboardButton {
     type Response = crate::types::PreparedKeyboardButton;
     const NAME: &'static str = "savePreparedKeyboardButton";
     const FIELDS: &'static [&'static str] = &["user_id", "button"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future."]
@@ -6786,6 +6913,11 @@ impl TelegramMethod for SendAnimation {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("show_caption_above_media", "show_caption_above_media"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future."]
@@ -7060,6 +7192,10 @@ impl TelegramMethod for SendAudio {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Use this method when you need to tell the user that something is happening on the bot's side. The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status). Returns True on success."]
@@ -7119,6 +7255,7 @@ impl TelegramMethod for SendChatAction {
         "business_connection_id",
         "message_thread_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to process a received chat join request query by showing a Mini App to the user before deciding the outcome. Call answerChatJoinRequestQuery to resolve the join request query based on the user interaction with the Mini App. Returns True on success."]
@@ -7156,6 +7293,7 @@ impl TelegramMethod for SendChatJoinRequestWebApp {
     type Response = bool;
     const NAME: &'static str = "sendChatJoinRequestWebApp";
     const FIELDS: &'static [&'static str] = &["chat_join_request_query_id", "web_app_url"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned."]
@@ -7257,6 +7395,7 @@ impl TelegramMethod for SendChecklist {
         "reply_parameters",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send phone contacts. On success, the sent Message is returned."]
@@ -7482,6 +7621,8 @@ impl TelegramMethod for SendContact {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned."]
@@ -7660,6 +7801,8 @@ impl TelegramMethod for SendDice {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future."]
@@ -7912,6 +8055,10 @@ impl TelegramMethod for SendDocument {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Use this method to send a game. On success, the sent Message is returned."]
@@ -8062,6 +8209,8 @@ impl TelegramMethod for SendGame {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Sends a gift to the given user or channel chat. The gift can't be converted to Telegram Stars by the receiver. Returns True on success."]
@@ -8160,6 +8309,7 @@ impl TelegramMethod for SendGift {
         "text_parse_mode",
         "text_entities",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send invoices. On success, the sent Message is returned."]
@@ -8524,6 +8674,8 @@ impl TelegramMethod for SendInvoice {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send live photos. On success, the sent Message is returned."]
@@ -8760,6 +8912,7 @@ impl TelegramMethod for SendLivePhoto {
         "receiver_user_id",
         "callback_query_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send point on the map. On success, the sent Message is returned."]
@@ -9003,6 +9156,8 @@ impl TelegramMethod for SendLocation {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send a group of photos, live photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an Array of Message objects that were sent is returned."]
@@ -9153,6 +9308,8 @@ impl TelegramMethod for SendMediaGroup {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send text messages. On success, the sent Message is returned."]
@@ -9391,6 +9548,12 @@ impl TelegramMethod for SendMessage {
         "disable_web_page_preview",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("link_preview_options", "link_preview"),
+        ("protect_content", "protect_content"),
+        ("disable_web_page_preview", "link_preview_is_disabled"),
+    ];
 }
 
 #[doc = "Use this method to stream a partial message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendMessage with the complete message to persist it in the user's chat. Returns True on success."]
@@ -9472,6 +9635,7 @@ impl TelegramMethod for SendMessageDraft {
         "parse_mode",
         "entities",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send paid media. On success, the sent Message is returned."]
@@ -9675,6 +9839,7 @@ impl TelegramMethod for SendPaidMedia {
         "reply_parameters",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send photos. On success, the sent Message is returned."]
@@ -9926,6 +10091,11 @@ impl TelegramMethod for SendPhoto {
         "callback_query_id",
         "allow_sending_without_reply",
         "reply_to_message_id",
+    ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("show_caption_above_media", "show_caption_above_media"),
+        ("protect_content", "protect_content"),
     ];
 }
 
@@ -10350,6 +10520,12 @@ impl TelegramMethod for SendPoll {
         "correct_option_id",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("question_parse_mode", "parse_mode"),
+        ("explanation_parse_mode", "parse_mode"),
+        ("description_parse_mode", "parse_mode"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Use this method to send rich messages. If the message contains a block with a media element, then the bot must have the right to send the media to the chat. On success, the sent Message is returned."]
@@ -10503,6 +10679,7 @@ impl TelegramMethod for SendRichMessage {
         "reply_parameters",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to stream a partial rich message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendRichMessage with the complete message to persist it in the user's chat. Returns True on success."]
@@ -10552,6 +10729,7 @@ impl TelegramMethod for SendRichMessageDraft {
     const NAME: &'static str = "sendRichMessageDraft";
     const FIELDS: &'static [&'static str] =
         &["chat_id", "draft_id", "rich_message", "message_thread_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers. On success, the sent Message is returned."]
@@ -10760,6 +10938,8 @@ impl TelegramMethod for SendSticker {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send information about a venue. On success, the sent Message is returned."]
@@ -11019,6 +11199,8 @@ impl TelegramMethod for SendVenue {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future."]
@@ -11348,6 +11530,11 @@ impl TelegramMethod for SendVideo {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("show_caption_above_media", "show_caption_above_media"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "As of v.4.0, Telegram clients support rounded square MPEG4 videos of up to 1 minute long. Use this method to send video messages. On success, the sent Message is returned."]
@@ -11578,6 +11765,8 @@ impl TelegramMethod for SendVideoNote {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] =
+        &[("protect_content", "protect_content")];
 }
 
 #[doc = "Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future."]
@@ -11819,6 +12008,10 @@ impl TelegramMethod for SendVoice {
         "allow_sending_without_reply",
         "reply_to_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[
+        ("parse_mode", "parse_mode"),
+        ("protect_content", "protect_content"),
+    ];
 }
 
 #[doc = "Changes the bio of a managed business account. Requires the can_change_bio business bot right. Returns True on success."]
@@ -11859,6 +12052,7 @@ impl TelegramMethod for SetBusinessAccountBio {
     type Response = bool;
     const NAME: &'static str = "setBusinessAccountBio";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "bio"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the privacy settings pertaining to incoming gifts in a managed business account. Requires the can_change_gift_settings business bot right. Returns True on success."]
@@ -11905,6 +12099,7 @@ impl TelegramMethod for SetBusinessAccountGiftSettings {
         "show_gift_button",
         "accepted_gift_types",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the first and last name of a managed business account. Requires the can_change_name business bot right. Returns True on success."]
@@ -11949,6 +12144,7 @@ impl TelegramMethod for SetBusinessAccountName {
     type Response = bool;
     const NAME: &'static str = "setBusinessAccountName";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "first_name", "last_name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success."]
@@ -11996,6 +12192,7 @@ impl TelegramMethod for SetBusinessAccountProfilePhoto {
     type Response = bool;
     const NAME: &'static str = "setBusinessAccountProfilePhoto";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "photo", "is_public"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the username of a managed business account. Requires the can_change_username business bot right. Returns True on success."]
@@ -12036,6 +12233,7 @@ impl TelegramMethod for SetBusinessAccountUsername {
     type Response = bool;
     const NAME: &'static str = "setBusinessAccountUsername";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "username"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success."]
@@ -12078,6 +12276,7 @@ impl TelegramMethod for SetChatAdministratorCustomTitle {
     type Response = bool;
     const NAME: &'static str = "setChatAdministratorCustomTitle";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id", "custom_title"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the description of a group, a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -12118,6 +12317,7 @@ impl TelegramMethod for SetChatDescription {
     type Response = bool;
     const NAME: &'static str = "setChatDescription";
     const FIELDS: &'static [&'static str] = &["chat_id", "description"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set a tag for a regular member in a group or a supergroup. The bot must be an administrator in the chat for this to work and must have the can_manage_tags administrator right. Returns True on success."]
@@ -12162,6 +12362,7 @@ impl TelegramMethod for SetChatMemberTag {
     type Response = bool;
     const NAME: &'static str = "setChatMemberTag";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id", "tag"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success."]
@@ -12214,6 +12415,7 @@ impl TelegramMethod for SetChatMenuButton {
     type Response = bool;
     const NAME: &'static str = "setChatMenuButton";
     const FIELDS: &'static [&'static str] = &["chat_id", "menu_button"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set default chat permissions for all members. The bot must be an administrator in the group or a supergroup for this to work and must have the can_restrict_members administrator rights. Returns True on success."]
@@ -12262,6 +12464,7 @@ impl TelegramMethod for SetChatPermissions {
     const NAME: &'static str = "setChatPermissions";
     const FIELDS: &'static [&'static str] =
         &["chat_id", "permissions", "use_independent_chat_permissions"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set a new profile photo for the chat. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -12299,6 +12502,7 @@ impl TelegramMethod for SetChatPhoto {
     type Response = bool;
     const NAME: &'static str = "setChatPhoto";
     const FIELDS: &'static [&'static str] = &["chat_id", "photo"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set a new group sticker set for a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success."]
@@ -12336,6 +12540,7 @@ impl TelegramMethod for SetChatStickerSet {
     type Response = bool;
     const NAME: &'static str = "setChatStickerSet";
     const FIELDS: &'static [&'static str] = &["chat_id", "sticker_set_name"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the title of a chat. Titles can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -12370,6 +12575,7 @@ impl TelegramMethod for SetChatTitle {
     type Response = bool;
     const NAME: &'static str = "setChatTitle";
     const FIELDS: &'static [&'static str] = &["chat_id", "title"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set the thumbnail of a custom emoji sticker set. Returns True on success."]
@@ -12410,6 +12616,7 @@ impl TelegramMethod for SetCustomEmojiStickerSetThumbnail {
     type Response = bool;
     const NAME: &'static str = "setCustomEmojiStickerSetThumbnail";
     const FIELDS: &'static [&'static str] = &["name", "custom_emoji_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set the score of the specified user in a game message. On success, if the message is not an inline message, the Message is returned, otherwise True is returned. Returns an error, if the new score is not greater than the user's current score in the chat and force is False."]
@@ -12502,6 +12709,7 @@ impl TelegramMethod for SetGameScore {
         "message_id",
         "inline_message_id",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the access settings of a managed bot. Returns True on success."]
@@ -12546,6 +12754,7 @@ impl TelegramMethod for SetManagedBotAccessSettings {
     type Response = bool;
     const NAME: &'static str = "setManagedBotAccessSettings";
     const FIELDS: &'static [&'static str] = &["user_id", "is_access_restricted", "added_user_ids"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the chosen reactions on a message. Service messages of some types can't be reacted to. Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel. Bots can't use paid reactions. Returns True on success."]
@@ -12600,6 +12809,7 @@ impl TelegramMethod for SetMessageReaction {
     type Response = bool;
     const NAME: &'static str = "setMessageReaction";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_id", "reaction", "is_big"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success."]
@@ -12650,6 +12860,7 @@ impl TelegramMethod for SetMyCommands {
     type Response = bool;
     const NAME: &'static str = "setMyCommands";
     const FIELDS: &'static [&'static str] = &["commands", "scope", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the default administrator rights requested by the bot when it's added as an administrator to groups or channels. These rights will be suggested to users, but they are free to modify the list before adding the bot. Returns True on success."]
@@ -12702,6 +12913,7 @@ impl TelegramMethod for SetMyDefaultAdministratorRights {
     type Response = bool;
     const NAME: &'static str = "setMyDefaultAdministratorRights";
     const FIELDS: &'static [&'static str] = &["rights", "for_channels"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the bot's description, which is shown in the chat with the bot if the chat is empty. Returns True on success."]
@@ -12754,6 +12966,7 @@ impl TelegramMethod for SetMyDescription {
     type Response = bool;
     const NAME: &'static str = "setMyDescription";
     const FIELDS: &'static [&'static str] = &["description", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the bot's name. Returns True on success."]
@@ -12806,6 +13019,7 @@ impl TelegramMethod for SetMyName {
     type Response = bool;
     const NAME: &'static str = "setMyName";
     const FIELDS: &'static [&'static str] = &["name", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the profile photo of the bot. Returns True on success."]
@@ -12836,6 +13050,7 @@ impl TelegramMethod for SetMyProfilePhoto {
     type Response = bool;
     const NAME: &'static str = "setMyProfilePhoto";
     const FIELDS: &'static [&'static str] = &["photo"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the bot's short description, which is shown on the bot's profile page and is sent together with the link when users share the bot. Returns True on success."]
@@ -12888,6 +13103,7 @@ impl TelegramMethod for SetMyShortDescription {
     type Response = bool;
     const NAME: &'static str = "setMyShortDescription";
     const FIELDS: &'static [&'static str] = &["short_description", "language_code"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Informs a user that some of the Telegram Passport elements they provided contains errors. The user will not be able to re-submit their Passport to you until the errors are fixed (the contents of the field for which you returned the error must change). Returns True on success."]
@@ -12922,6 +13138,7 @@ impl TelegramMethod for SetPassportDataErrors {
     type Response = bool;
     const NAME: &'static str = "setPassportDataErrors";
     const FIELDS: &'static [&'static str] = &["user_id", "errors"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the list of emoji assigned to a regular or custom emoji sticker. The sticker must belong to a sticker set created by the bot. Returns True on success."]
@@ -12956,6 +13173,7 @@ impl TelegramMethod for SetStickerEmojiList {
     type Response = bool;
     const NAME: &'static str = "setStickerEmojiList";
     const FIELDS: &'static [&'static str] = &["sticker", "emoji_list"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change search keywords assigned to a regular or custom emoji sticker. The sticker must belong to a sticker set created by the bot. Returns True on success."]
@@ -12996,6 +13214,7 @@ impl TelegramMethod for SetStickerKeywords {
     type Response = bool;
     const NAME: &'static str = "setStickerKeywords";
     const FIELDS: &'static [&'static str] = &["sticker", "keywords"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to change the mask position of a mask sticker. The sticker must belong to a sticker set that was created by the bot. Returns True on success."]
@@ -13036,6 +13255,7 @@ impl TelegramMethod for SetStickerMaskPosition {
     type Response = bool;
     const NAME: &'static str = "setStickerMaskPosition";
     const FIELDS: &'static [&'static str] = &["sticker", "mask_position"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to move a sticker in a set created by the bot to a specific position. Returns True on success."]
@@ -13070,6 +13290,7 @@ impl TelegramMethod for SetStickerPositionInSet {
     type Response = bool;
     const NAME: &'static str = "setStickerPositionInSet";
     const FIELDS: &'static [&'static str] = &["sticker", "position"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set the thumbnail of a regular or mask sticker set. The format of the thumbnail file must match the format of the stickers in the set. Returns True on success."]
@@ -13118,6 +13339,7 @@ impl TelegramMethod for SetStickerSetThumbnail {
     type Response = bool;
     const NAME: &'static str = "setStickerSetThumbnail";
     const FIELDS: &'static [&'static str] = &["name", "user_id", "format", "thumbnail"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to set the title of a created sticker set. Returns True on success."]
@@ -13152,6 +13374,7 @@ impl TelegramMethod for SetStickerSetTitle {
     type Response = bool;
     const NAME: &'static str = "setStickerSetTitle";
     const FIELDS: &'static [&'static str] = &["name", "title"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the Mini App method requestEmojiStatusAccess. Returns True on success."]
@@ -13206,6 +13429,7 @@ impl TelegramMethod for SetUserEmojiStatus {
         "emoji_status_custom_emoji_id",
         "emoji_status_expiration_date",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to specify a URL and receive incoming updates via an outgoing webhook. Whenever there is an update for the bot, we will send an HTTPS POST request to the specified URL, containing a JSON-serialized Update. In case of an unsuccessful request (a request with response HTTP status code different from 2XY), we will repeat the request and give up after a reasonable amount of attempts. Returns True on success."]
@@ -13304,6 +13528,7 @@ impl TelegramMethod for SetWebhook {
         "drop_pending_updates",
         "secret_token",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to stop updating a live location message before live_period expires. On success, if the message is not an inline message, the edited Message is returned, otherwise True is returned."]
@@ -13392,6 +13617,7 @@ impl TelegramMethod for StopMessageLiveLocation {
         "inline_message_id",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned."]
@@ -13451,6 +13677,7 @@ impl TelegramMethod for StopPoll {
         "business_connection_id",
         "reply_markup",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Transfers Telegram Stars from the business account balance to the bot's balance. Requires the can_transfer_stars business bot right. Returns True on success."]
@@ -13485,6 +13712,7 @@ impl TelegramMethod for TransferBusinessAccountStars {
     type Response = bool;
     const NAME: &'static str = "transferBusinessAccountStars";
     const FIELDS: &'static [&'static str] = &["business_connection_id", "star_count"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Transfers an owned unique gift to another user. Requires the can_transfer_and_upgrade_gifts business bot right. Requires can_transfer_stars business bot right if the transfer is paid. Returns True on success."]
@@ -13542,6 +13770,7 @@ impl TelegramMethod for TransferGift {
         "new_owner_chat_id",
         "star_count",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to unban a previously banned user in a supergroup or channel. The user will not return to the group or channel automatically, but will be able to join via link, etc. The bot must be an administrator for this to work. By default, this method guarantees that after the call the user is not a member of the chat, but will be able to join it. So if the user is a member of the chat they will also be removed from the chat. If you don't want this, use the parameter only_if_banned. Returns True on success."]
@@ -13586,6 +13815,7 @@ impl TelegramMethod for UnbanChatMember {
     type Response = bool;
     const NAME: &'static str = "unbanChatMember";
     const FIELDS: &'static [&'static str] = &["chat_id", "user_id", "only_if_banned"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to unban a previously banned channel chat in a supergroup or channel. The bot must be an administrator for this to work and must have the appropriate administrator rights. Returns True on success."]
@@ -13620,6 +13850,7 @@ impl TelegramMethod for UnbanChatSenderChat {
     type Response = bool;
     const NAME: &'static str = "unbanChatSenderChat";
     const FIELDS: &'static [&'static str] = &["chat_id", "sender_chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to unhide the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success."]
@@ -13650,6 +13881,7 @@ impl TelegramMethod for UnhideGeneralForumTopic {
     type Response = bool;
     const NAME: &'static str = "unhideGeneralForumTopic";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to clear the list of pinned messages in a chat. In private chats and channel direct messages chats, no additional rights are required to unpin all pinned messages. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to unpin all pinned messages in groups and channels respectively. Returns True on success."]
@@ -13680,6 +13912,7 @@ impl TelegramMethod for UnpinAllChatMessages {
     type Response = bool;
     const NAME: &'static str = "unpinAllChatMessages";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to clear the list of pinned messages in a forum topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success."]
@@ -13714,6 +13947,7 @@ impl TelegramMethod for UnpinAllForumTopicMessages {
     type Response = bool;
     const NAME: &'static str = "unpinAllForumTopicMessages";
     const FIELDS: &'static [&'static str] = &["chat_id", "message_thread_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to clear the list of pinned messages in a General forum topic. The bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success."]
@@ -13744,6 +13978,7 @@ impl TelegramMethod for UnpinAllGeneralForumTopicMessages {
     type Response = bool;
     const NAME: &'static str = "unpinAllGeneralForumTopicMessages";
     const FIELDS: &'static [&'static str] = &["chat_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to remove a message from the list of pinned messages in a chat. In private chats and channel direct messages chats, all messages can be unpinned. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to unpin messages in groups and channels respectively. Returns True on success."]
@@ -13794,6 +14029,7 @@ impl TelegramMethod for UnpinChatMessage {
     type Response = bool;
     const NAME: &'static str = "unpinChatMessage";
     const FIELDS: &'static [&'static str] = &["chat_id", "business_connection_id", "message_id"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Upgrades a given regular gift to a unique gift. Requires the can_transfer_and_upgrade_gifts business bot right. Additionally requires the can_transfer_stars business bot right if the upgrade is paid. Returns True on success."]
@@ -13856,6 +14092,7 @@ impl TelegramMethod for UpgradeGift {
         "keep_original_details",
         "star_count",
     ];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Use this method to upload a file with a sticker for later use in the createNewStickerSet, addStickerToSet, or replaceStickerInSet methods (the file can be used multiple times). Returns the uploaded File on success."]
@@ -13898,6 +14135,7 @@ impl TelegramMethod for UploadStickerFile {
     type Response = crate::types::File;
     const NAME: &'static str = "uploadStickerFile";
     const FIELDS: &'static [&'static str] = &["user_id", "sticker", "sticker_format"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Verifies a chat on behalf of the organization which is represented by the bot. Returns True on success."]
@@ -13938,6 +14176,7 @@ impl TelegramMethod for VerifyChat {
     type Response = bool;
     const NAME: &'static str = "verifyChat";
     const FIELDS: &'static [&'static str] = &["chat_id", "custom_description"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }
 
 #[doc = "Verifies a user on behalf of the organization which is represented by the bot. Returns True on success."]
@@ -13978,4 +14217,5 @@ impl TelegramMethod for VerifyUser {
     type Response = bool;
     const NAME: &'static str = "verifyUser";
     const FIELDS: &'static [&'static str] = &["user_id", "custom_description"];
+    const DEFAULT_PROPERTIES: &'static [(&'static str, &'static str)] = &[];
 }

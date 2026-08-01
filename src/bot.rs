@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -176,7 +176,9 @@ impl Bot {
 
     pub(crate) fn prepare_request<M: TelegramMethod>(&self, method: &M) -> Result<BotRequest> {
         let mut payload = serde_json::to_value(method)?;
-        self.inner.defaults.apply(M::FIELDS, &mut payload)?;
+        self.inner
+            .defaults
+            .apply(M::DEFAULT_PROPERTIES, &mut payload)?;
         Ok(BotRequest::new(
             M::NAME,
             payload,
@@ -198,16 +200,20 @@ impl Bot {
         let object = payload.as_object_mut().ok_or_else(|| {
             Error::InvalidPayload("Telegram method payload must be an object".to_owned())
         })?;
-        for field in fields {
-            let field = field.as_ref();
-            if DEFAULT_PROPERTY_FIELDS.contains(&field)
-                && M::FIELDS.contains(&field)
-                && !object.contains_key(field)
+        let fields: BTreeSet<String> = fields
+            .into_iter()
+            .map(|field| field.as_ref().to_owned())
+            .collect();
+        for &(wire_field, property) in M::DEFAULT_PROPERTIES {
+            if (fields.contains(wire_field) || fields.contains(property))
+                && !object.contains_key(wire_field)
             {
-                object.insert(field.to_owned(), serde_json::Value::Null);
+                object.insert(wire_field.to_owned(), serde_json::Value::Null);
             }
         }
-        self.inner.defaults.apply(M::FIELDS, &mut payload)?;
+        self.inner
+            .defaults
+            .apply(M::DEFAULT_PROPERTIES, &mut payload)?;
         Ok(BotRequest::new(
             M::NAME,
             payload,
@@ -922,6 +928,29 @@ mod tests {
         assert_eq!(payload["protect_content"], true);
         assert_eq!(payload["link_preview_options"]["is_disabled"], true);
         assert!(payload.get("disable_notification").is_none());
+    }
+
+    #[test]
+    fn generated_default_mappings_cover_aliases_and_exclude_plain_optional_fields() {
+        let bot = Bot::builder("123456:abcdefghijklmnopqrstuvwxyzABCDE")
+            .defaults(
+                DefaultBotProperties::default()
+                    .parse_mode("HTML")
+                    .protect_content(true),
+            )
+            .build()
+            .unwrap();
+        let poll = crate::methods::SendPoll::new(42_i64, "Question", Vec::new());
+        let payload = bot.prepare_request(&poll).unwrap().payload;
+        assert_eq!(payload["question_parse_mode"], "HTML");
+        assert_eq!(payload["explanation_parse_mode"], "HTML");
+        assert_eq!(payload["description_parse_mode"], "HTML");
+        assert_eq!(payload["protect_content"], true);
+
+        let ephemeral = crate::methods::EditEphemeralMessageText::new(42_i64, 7, 8, "Text");
+        let payload = bot.prepare_request(&ephemeral).unwrap().payload;
+        assert!(payload.get("parse_mode").is_none());
+        assert!(payload.get("protect_content").is_none());
     }
 
     #[tokio::test]

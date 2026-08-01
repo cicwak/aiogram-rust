@@ -267,59 +267,54 @@ impl DefaultBotProperties {
         self
     }
 
-    pub(crate) fn apply(&self, fields: &[&str], payload: &mut Value) -> Result<()> {
+    pub(crate) fn apply(&self, defaults: &[(&str, &str)], payload: &mut Value) -> Result<()> {
         let Some(object) = payload.as_object_mut() else {
             return Ok(());
         };
-        self.insert(fields, object, "parse_mode", self.parse_mode.as_ref())?;
-        self.insert(
-            fields,
-            object,
-            "disable_notification",
-            self.disable_notification.as_ref(),
-        )?;
-        self.insert(
-            fields,
-            object,
-            "protect_content",
-            self.protect_content.as_ref(),
-        )?;
-        self.insert(
-            fields,
-            object,
-            "allow_sending_without_reply",
-            self.allow_sending_without_reply.as_ref(),
-        )?;
         let generated_link_preview = self.generated_link_preview();
-        self.insert(
-            fields,
-            object,
-            "link_preview_options",
-            self.link_preview
-                .as_ref()
-                .or(generated_link_preview.as_ref()),
-        )?;
-        self.insert(
-            fields,
-            object,
-            "show_caption_above_media",
-            self.show_caption_above_media.as_ref(),
-        )?;
+        for &(field, property) in defaults {
+            match property {
+                "parse_mode" => self.insert(object, field, self.parse_mode.as_ref())?,
+                "disable_notification" => {
+                    self.insert(object, field, self.disable_notification.as_ref())?
+                }
+                "protect_content" => self.insert(object, field, self.protect_content.as_ref())?,
+                "allow_sending_without_reply" => {
+                    self.insert(object, field, self.allow_sending_without_reply.as_ref())?
+                }
+                "link_preview" => self.insert(
+                    object,
+                    field,
+                    self.link_preview
+                        .as_ref()
+                        .or(generated_link_preview.as_ref()),
+                )?,
+                "link_preview_is_disabled" => {
+                    self.insert(object, field, self.link_preview_is_disabled.as_ref())?
+                }
+                "link_preview_prefer_small_media" => {
+                    self.insert(object, field, self.link_preview_prefer_small_media.as_ref())?
+                }
+                "link_preview_prefer_large_media" => {
+                    self.insert(object, field, self.link_preview_prefer_large_media.as_ref())?
+                }
+                "link_preview_show_above_text" => {
+                    self.insert(object, field, self.link_preview_show_above_text.as_ref())?
+                }
+                "show_caption_above_media" => {
+                    self.insert(object, field, self.show_caption_above_media.as_ref())?
+                }
+                property => {
+                    return Err(crate::Error::InvalidPayload(format!(
+                        "unsupported aiogram default property {property:?} for field {field:?}"
+                    )));
+                }
+            }
+        }
         // A flattened explicit JSON null is an internal opt-out marker. It
         // prevents a client default from being inserted, but is removed before
         // the payload reaches Telegram.
-        for name in [
-            "parse_mode",
-            "disable_notification",
-            "protect_content",
-            "allow_sending_without_reply",
-            "link_preview_options",
-            "show_caption_above_media",
-        ] {
-            if object.get(name).is_some_and(Value::is_null) {
-                object.remove(name);
-            }
-        }
+        object.retain(|_, value| !value.is_null());
         Ok(())
     }
 
@@ -353,13 +348,11 @@ impl DefaultBotProperties {
 
     fn insert<T: serde::Serialize>(
         &self,
-        fields: &[&str],
         object: &mut serde_json::Map<String, Value>,
         name: &str,
         value: Option<&T>,
     ) -> Result<()> {
-        if fields.contains(&name)
-            && !object.contains_key(name)
+        if !object.contains_key(name)
             && let Some(value) = value
         {
             object.insert(name.to_owned(), serde_json::to_value(value)?);
