@@ -40,7 +40,7 @@ impl State {
 
     pub fn ungrouped(name: impl Into<String>) -> Self {
         Self {
-            group: None,
+            group: Some(Cow::Borrowed("@")),
             name: Some(Cow::Owned(name.into())),
             any: false,
         }
@@ -1710,6 +1710,14 @@ mod tests {
         assert!(Form::group().contains("Form:age"));
         assert!(State::any().matches(Some("another:state")));
         assert!(!State::default().matches(Some("Form:name")));
+    }
+
+    #[test]
+    fn standalone_state_uses_aiogram_at_group_name() {
+        let state = State::ungrouped("test");
+        assert_eq!(state.full_name().as_deref(), Some("@:test"));
+        assert!(state.matches(Some("@:test")));
+        assert!(!state.matches(Some("test")));
     }
 
     #[test]
