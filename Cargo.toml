@@ -1,0 +1,66 @@
+[workspace]
+members = ["xtask"]
+resolver = "3"
+
+[package]
+name = "aiogram"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "An ergonomic asynchronous Telegram Bot API framework for Rust, ported from aiogram"
+documentation = "https://docs.rs/aiogram"
+license = "MIT"
+readme = "README.md"
+include = [
+    "/src/**",
+    "/examples/**",
+    "/docs/**",
+    "/Cargo.toml",
+    "/Cargo.lock",
+    "/README.md",
+    "/LICENSE",
+    "/NOTICE",
+    "/compatibility.toml",
+]
+keywords = ["telegram", "bot", "async", "framework", "aiogram"]
+categories = ["api-bindings", "asynchronous", "web-programming"]
+
+[features]
+default = []
+fsm-redis = ["dep:redis"]
+fsm-mongodb = ["dep:mongodb"]
+webhook-axum = ["dep:axum"]
+
+[package.metadata.aiogram-compat]
+aiogram-version = "3.30.0"
+aiogram-commit = "c1b0353ce3d3f8d70f90469038939a956e9e09f7"
+telegram-bot-api-version = "10.2"
+
+[dependencies]
+async-trait = "0.1"
+axum = { version = "0.8", optional = true }
+base64 = "0.22"
+caseless = "0.2.2"
+dashmap = "6.1"
+ed25519-dalek = "2"
+futures-util = "=0.3.32"
+gettext = "0.4"
+hmac = "0.12"
+mongodb = { version = "3.8", optional = true }
+regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream"] }
+redis = { version = "1.5", optional = true, features = ["tokio-comp", "connection-manager"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+subtle = "2.6"
+thiserror = "2"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-util = { version = "0.7", features = ["io"] }
+tracing = "0.1"
+url = "2.5"
+
+[dev-dependencies]
+toml = "0.9"
+tower = { version = "0.5", features = ["util"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
