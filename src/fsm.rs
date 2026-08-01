@@ -105,9 +105,31 @@ impl StatesGroup {
         }
     }
 
-    pub fn child(mut self, child: StatesGroup) -> Self {
+    pub fn child(mut self, mut child: StatesGroup) -> Self {
+        child.rebase(&self.name);
         self.children.push(child);
         self
+    }
+
+    fn rebase(&mut self, parent: &str) {
+        let previous_name = self.name.clone();
+        if !self.name.starts_with(&format!("{parent}.")) {
+            let local_name = self.name.rsplit('.').next().unwrap_or(self.name.as_str());
+            self.name = format!("{parent}.{local_name}");
+        }
+        for state in &mut self.states {
+            if !state.any
+                && state
+                    .group
+                    .as_deref()
+                    .is_none_or(|group| group == previous_name)
+            {
+                state.group = Some(Cow::Owned(self.name.clone()));
+            }
+        }
+        for child in &mut self.children {
+            child.rebase(&self.name);
+        }
     }
 
     pub fn contains(&self, raw_state: &str) -> bool {
@@ -1688,6 +1710,31 @@ mod tests {
         assert!(Form::group().contains("Form:age"));
         assert!(State::any().matches(Some("another:state")));
         assert!(!State::default().matches(Some("Form:name")));
+    }
+
+    #[test]
+    fn nested_state_groups_rebase_all_descendant_state_names() {
+        let grandchild =
+            StatesGroup::new("Grandchild", vec![State::new("Grandchild", "confirmation")]);
+        let child =
+            StatesGroup::new("Child", vec![State::new("Child", "details")]).child(grandchild);
+        let root = StatesGroup::new("Root", vec![State::new("Root", "start")]).child(child);
+
+        assert_eq!(root.children[0].name, "Root.Child");
+        assert_eq!(
+            root.children[0].states[0].full_name().as_deref(),
+            Some("Root.Child:details")
+        );
+        assert_eq!(root.children[0].children[0].name, "Root.Child.Grandchild");
+        assert_eq!(
+            root.children[0].children[0].states[0]
+                .full_name()
+                .as_deref(),
+            Some("Root.Child.Grandchild:confirmation")
+        );
+        assert!(root.contains("Root.Child:details"));
+        assert!(root.contains("Root.Child.Grandchild:confirmation"));
+        assert!(!root.contains("Child:details"));
     }
 
     #[tokio::test]
