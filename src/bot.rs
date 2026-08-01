@@ -174,7 +174,9 @@ impl Bot {
         }
     }
 
-    pub(crate) fn prepare_request<M: TelegramMethod>(&self, method: &M) -> Result<BotRequest> {
+    /// Serializes a typed method, applies this bot's defaults, discovers file
+    /// uploads and returns the exact request passed to client middleware.
+    pub fn prepare_request<M: TelegramMethod>(&self, method: &M) -> Result<BotRequest> {
         let mut payload = serde_json::to_value(method)?;
         self.inner
             .defaults

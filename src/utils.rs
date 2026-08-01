@@ -2176,6 +2176,8 @@ pub mod payload {
 pub mod serialization {
     use serde::Serialize;
 
+    use crate::client::DefaultBotProperties;
+    use crate::error::Result;
     use crate::methods::TelegramMethod;
     use crate::types::{CollectFiles, InputFileUpload};
 
@@ -2202,8 +2204,21 @@ pub mod serialization {
     pub fn deserialize_method<M: TelegramMethod>(
         method: &M,
         include_api_method_name: bool,
-    ) -> serde_json::Result<DeserializedTelegramObject> {
+    ) -> Result<DeserializedTelegramObject> {
+        deserialize_method_with_defaults(
+            method,
+            &DefaultBotProperties::default(),
+            include_api_method_name,
+        )
+    }
+
+    pub fn deserialize_method_with_defaults<M: TelegramMethod>(
+        method: &M,
+        defaults: &DefaultBotProperties,
+        include_api_method_name: bool,
+    ) -> Result<DeserializedTelegramObject> {
         let mut object = deserialize_telegram_object(method)?;
+        defaults.apply(M::DEFAULT_PROPERTIES, &mut object.data)?;
         if include_api_method_name && let Some(data) = object.data.as_object_mut() {
             data.insert(
                 "method".to_owned(),
@@ -3793,6 +3808,22 @@ mod tests {
         assert_eq!(serialized.data["photo"], "attach://photo");
         assert_eq!(serialized.files.len(), 1);
         assert_eq!(serialized.files[0].file_name, "photo.jpg");
+
+        let defaults = crate::DefaultBotProperties::default().parse_mode("HTML");
+        let message = crate::methods::SendMessage::new(42_i64, "<b>test</b>");
+        let serialized =
+            super::serialization::deserialize_method_with_defaults(&message, &defaults, true)
+                .unwrap();
+        assert_eq!(serialized.data["parse_mode"], "HTML");
+
+        let formatted = Text::plain("formatted")
+            .then(bold(" text"))
+            .into_send_message(42_i64);
+        let serialized =
+            super::serialization::deserialize_method_with_defaults(&formatted, &defaults, false)
+                .unwrap();
+        assert!(serialized.data.get("method").is_none());
+        assert!(serialized.data.get("parse_mode").is_none());
     }
 
     #[test]
