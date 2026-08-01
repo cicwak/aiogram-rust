@@ -3553,7 +3553,12 @@ mod tests {
         );
 
         assert!(formatted.slice_utf16(1..2).is_err());
-        assert!(formatted.slice_utf16(12..11).is_err());
+        let utf16_len = formatted.render().text.encode_utf16().count();
+        assert!(
+            formatted
+                .slice_utf16(utf16_len..utf16_len.saturating_sub(1))
+                .is_err()
+        );
         assert!(formatted.slice_utf16(0..100).is_err());
     }
 

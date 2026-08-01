@@ -727,7 +727,14 @@ mod tests {
 
     #[test]
     fn equality_and_hash_follow_the_bot_token() {
-        use std::collections::HashSet;
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        fn hash(bot: &Bot) -> u64 {
+            let mut hasher = DefaultHasher::new();
+            bot.hash(&mut hasher);
+            hasher.finish()
+        }
 
         let production = Bot::new("42:secret").unwrap();
         let custom_server = Bot::with_api_base("42:secret", "http://localhost:8081").unwrap();
@@ -735,11 +742,8 @@ mod tests {
 
         assert_eq!(production, custom_server);
         assert_ne!(production, other);
-        let mut bots = HashSet::new();
-        bots.insert(production);
-        bots.insert(custom_server);
-        bots.insert(other);
-        assert_eq!(bots.len(), 2);
+        assert_eq!(hash(&production), hash(&custom_server));
+        assert_ne!(hash(&production), hash(&other));
     }
 
     #[test]
