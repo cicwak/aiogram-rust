@@ -1,0 +1,8 @@
+This project is a Rust port inspired by and based on the public API and behavior
+of aiogram (https://github.com/aiogram/aiogram), distributed under the MIT
+License.
+
+aiogram copyright (c) 2017-present Alex Root Junior.
+
+The upstream aiogram source remains independently licensed and is used as the
+compatibility reference identified in compatibility.toml.
